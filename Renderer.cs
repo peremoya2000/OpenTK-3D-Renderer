@@ -7,13 +7,19 @@ namespace OpenTK_3D_Renderer
 {
     public class Renderer : GameWindow
     {
-        private float[] vertices = {
-            -0.5f, -0.5f, 0.0f, //Bottom-left vertex
-             0.5f, -0.5f, 0.0f, //Bottom-right vertex
-            0.0f,  0.5f, 0.0f   //Top vertex
+        float[] vertices = {
+            0.5f,  0.5f, 0.0f,  // top right
+            0.5f, -0.5f, 0.0f,  // bottom right
+            -0.5f, -0.5f, 0.0f,  // bottom left
+            -0.5f,  0.5f, 0.0f   // top left
         };
 
-        private int vertexBufferObject;
+        uint[] indices = {
+            0, 1, 3,   // first triangle
+            1, 2, 3    // second triangle
+        };
+
+        private int vertexBufferObject, elementBufferObject;
         private int vertexArrayObject;
         private Shader mainShader;
 
@@ -39,6 +45,10 @@ namespace OpenTK_3D_Renderer
             GL.BindVertexArray(vertexArrayObject);
             GL.VertexAttribPointer(0, 3, VertexAttribPointerType.Float, false, 3 * sizeof(float), 0);
             GL.EnableVertexAttribArray(0);
+
+            elementBufferObject = GL.GenBuffer();
+            GL.BindBuffer(BufferTarget.ElementArrayBuffer, elementBufferObject);
+            GL.BufferData(BufferTarget.ElementArrayBuffer, indices.Length * sizeof(uint), indices, BufferUsageHint.StaticDraw);
 
             mainShader = new Shader("../../../shader.vert", "../../../shader.frag");
             mainShader.Use();
@@ -72,7 +82,7 @@ namespace OpenTK_3D_Renderer
 
             mainShader.Use();
             GL.BindVertexArray(vertexArrayObject);
-            GL.DrawArrays(PrimitiveType.Triangles, 0, 3);
+            GL.DrawElements(PrimitiveType.Triangles, indices.Length, DrawElementsType.UnsignedInt, 0);
 
             SwapBuffers();
         }
