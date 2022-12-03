@@ -2,7 +2,6 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Text;
 
 namespace OpenTK_3D_Renderer
 {
@@ -33,6 +32,11 @@ namespace OpenTK_3D_Renderer
         {
             Dispose(true);
             GC.SuppressFinalize(this);
+        }
+
+        public int GetAttribLocation(string attribName)
+        {
+            return GL.GetAttribLocation(Handle, attribName);
         }
 
         protected virtual void Dispose(bool disposing)
@@ -111,5 +115,7 @@ namespace OpenTK_3D_Renderer
             GL.DeleteShader(fragmentShader);
             GL.DeleteShader(vertexShader);
         }
+
+
     }
 }

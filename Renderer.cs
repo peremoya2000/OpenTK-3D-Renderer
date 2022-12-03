@@ -7,12 +7,15 @@ namespace OpenTK_3D_Renderer
 {
     public class Renderer : GameWindow
     {
-        float[] vertices = {
-            0.5f,  0.5f, 0.0f,  // top right
-            0.5f, -0.5f, 0.0f,  // bottom right
-            -0.5f, -0.5f, 0.0f,  // bottom left
-            -0.5f,  0.5f, 0.0f   // top left
+        float[] vertices =
+        {
+            //Position          Texture coordinates
+            0.5f,  0.5f, 0.0f, 1.0f, 1.0f, // top right
+            0.5f, -0.5f, 0.0f, 1.0f, 0.0f, // bottom right
+            -0.5f, -0.5f, 0.0f, 0.0f, 0.0f, // bottom left
+            -0.5f,  0.5f, 0.0f, 0.0f, 1.0f  // top left
         };
+
 
         uint[] indices = {
             0, 1, 3,   // first triangle
@@ -22,6 +25,7 @@ namespace OpenTK_3D_Renderer
         private int vertexBufferObject, elementBufferObject;
         private int vertexArrayObject;
         private Shader mainShader;
+        private Texture mainTex;
 
         public Renderer(int width, int height, string title) : base(GameWindowSettings.Default, new NativeWindowSettings() { Size = (width, height), Title = title })
         {
@@ -43,16 +47,20 @@ namespace OpenTK_3D_Renderer
 
             vertexArrayObject = GL.GenVertexArray();
             GL.BindVertexArray(vertexArrayObject);
-            GL.VertexAttribPointer(0, 3, VertexAttribPointerType.Float, false, 3 * sizeof(float), 0);
+            GL.VertexAttribPointer(0, 3, VertexAttribPointerType.Float, false, 5 * sizeof(float), 0);
             GL.EnableVertexAttribArray(0);
+
+            mainShader = new Shader(Project.Resources+"shader.vert", Project.Resources+"shader.frag");
+            mainShader.Use();
 
             elementBufferObject = GL.GenBuffer();
             GL.BindBuffer(BufferTarget.ElementArrayBuffer, elementBufferObject);
             GL.BufferData(BufferTarget.ElementArrayBuffer, indices.Length * sizeof(uint), indices, BufferUsageHint.StaticDraw);
 
-            mainShader = new Shader("../../../shader.vert", "../../../shader.frag");
-            mainShader.Use();
-
+            int texCoordLocation = mainShader.GetAttribLocation("aTexCoord");
+            GL.EnableVertexAttribArray(texCoordLocation);
+            GL.VertexAttribPointer(texCoordLocation, 2, VertexAttribPointerType.Float, false, 5 * sizeof(float), 3 * sizeof(float));
+            mainTex = new Texture( Project.Resources+"tempTexture.jpg");
         }
 
         protected override void OnUnload()

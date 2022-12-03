@@ -8,7 +8,8 @@
     ".NETCoreApp,Version=v3.1": {
       "OpenTK-3D-Renderer/1.0.0": {
         "dependencies": {
-          "OpenTK": "4.7.5"
+          "OpenTK": "4.7.5",
+          "StbImageSharp": "2.27.13"
         },
         "runtime": {
           "OpenTK-3D-Renderer.dll": {}
@@ -153,6 +154,14 @@
           }
         }
       },
+      "StbImageSharp/2.27.13": {
+        "runtime": {
+          "lib/netstandard2.0/StbImageSharp.dll": {
+            "assemblyVersion": "2.27.13.0",
+            "fileVersion": "2.27.13.0"
+          }
+        }
+      },
       "System.Runtime.CompilerServices.Unsafe/5.0.0": {
         "runtime": {
           "lib/netcoreapp2.0/System.Runtime.CompilerServices.Unsafe.dll": {
@@ -245,6 +254,13 @@
       "sha512": "sha512-zBSlfqgmtRZD41XlWVKbArtStLjOlvhMIaS6ETbYdbp6Nl/m3oPqnOGegfP12lFe2FvxBq/nRGgaNiQ/VSVPRg==",
       "path": "opentk.windowing.graphicslibraryframework/4.7.5",
       "hashPath": "opentk.windowing.graphicslibraryframework.4.7.5.nupkg.sha512"
+    },
+    "StbImageSharp/2.27.13": {
+      "type": "package",
+      "serviceable": true,
+      "sha512": "sha512-tHnP2RHgFzWbOS96UqvRO/LYU1WmpMT1bKiig45we+rpaXacBr11Fq2IBF+MqlgyLyNXxRz18E66qr4R9YlSbg==",
+      "path": "stbimagesharp/2.27.13",
+      "hashPath": "stbimagesharp.2.27.13.nupkg.sha512"
     },
     "System.Runtime.CompilerServices.Unsafe/5.0.0": {
       "type": "package",

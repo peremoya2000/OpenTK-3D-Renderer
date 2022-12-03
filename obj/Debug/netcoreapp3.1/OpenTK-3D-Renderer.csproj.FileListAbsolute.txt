@@ -28,3 +28,4 @@ D:\Programes\C# projects\OpenTK-3D-Renderer\obj\Debug\netcoreapp3.1\OpenTK-3D-Re
 D:\Programes\C# projects\OpenTK-3D-Renderer\obj\Debug\netcoreapp3.1\OpenTK-3D-Renderer.dll
 D:\Programes\C# projects\OpenTK-3D-Renderer\obj\Debug\netcoreapp3.1\OpenTK-3D-Renderer.pdb
 D:\Programes\C# projects\OpenTK-3D-Renderer\obj\Debug\netcoreapp3.1\OpenTK-3D-Renderer.genruntimeconfig.cache
+D:\Programes\C# projects\OpenTK-3D-Renderer\bin\Debug\netcoreapp3.1\StbImageSharp.dll
