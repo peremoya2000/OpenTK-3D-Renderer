@@ -1,4 +1,5 @@
 ﻿using OpenTK.Graphics.OpenGL4;
+using OpenTK.Mathematics;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -10,6 +11,7 @@ namespace OpenTK_3D_Renderer
         public int Handle { get;  private set; }
         private int vertexShader, fragmentShader;
         private bool disposedValue = false;
+        private Dictionary<string, int> uniformLocations;
 
         public Shader(string vertexPath, string fragmentPath)
         {
@@ -21,6 +23,8 @@ namespace OpenTK_3D_Renderer
             CreateGlProgram();
 
             UnbindAndDeleteShaders();
+
+            CacheUniformLocations();
         }
 
         public void Use()
@@ -37,6 +41,30 @@ namespace OpenTK_3D_Renderer
         public int GetAttribLocation(string attribName)
         {
             return GL.GetAttribLocation(Handle, attribName);
+        }
+
+        public void SetInt(string name, int data)
+        {
+            GL.UseProgram(Handle);
+            GL.Uniform1(uniformLocations[name], data);
+        }
+
+        public void SetFloat(string name, float data)
+        {
+            GL.UseProgram(Handle);
+            GL.Uniform1(uniformLocations[name], data);
+        }
+
+        public void SetMatrix4(string name, Matrix4 data)
+        {
+            GL.UseProgram(Handle);
+            GL.UniformMatrix4(uniformLocations[name], true, ref data);
+        }
+
+        public void SetVector3(string name, Vector3 data)
+        {
+            GL.UseProgram(Handle);
+            GL.Uniform3(uniformLocations[name], data);
         }
 
         protected virtual void Dispose(bool disposing)
@@ -116,6 +144,19 @@ namespace OpenTK_3D_Renderer
             GL.DeleteShader(vertexShader);
         }
 
+        private void CacheUniformLocations()
+        {
+            GL.GetProgram(Handle, GetProgramParameterName.ActiveUniforms, out var numberOfUniforms);
 
+            uniformLocations = new Dictionary<string, int>();
+
+            for (short i = 0; i < numberOfUniforms; ++i)
+            {
+                string key = GL.GetActiveUniform(Handle, i, out _, out _);
+                int location = GL.GetUniformLocation(Handle, key);
+
+                uniformLocations.Add(key, location);
+            }
+        }
     }
 }

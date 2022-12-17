@@ -6,9 +6,7 @@ namespace OpenTK_3D_Renderer
     {
         static void Main()
         {
-            Console.WriteLine("Hello World!");
-
-            using (Renderer renderer = new Renderer(800, 600, "OpenTK-Renderer"))
+            using (Renderer renderer = new Renderer(1920, 1080, "OpenTK-Renderer"))
             {
                 renderer.Run();
             }
