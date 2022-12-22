@@ -57,11 +57,22 @@ namespace OpenTK_3D_Renderer
         private int vertexArrayObject;
         private Shader mainShader;
         private Texture mainTex;
+        private Input input;
+        private Camera camera;
 
         public Renderer(int width, int height, string title) : base(GameWindowSettings.Default, new NativeWindowSettings() { Size = (width, height), Title = title })
         {
             this.RenderFrequency = 120;
             this.UpdateFrequency = 120;
+            input = new Input(KeyboardState, MouseState);
+            input.OnClose += OnCloseInput;
+            CursorState = CursorState.Grabbed;
+            camera = new Camera(new Vector3(0,0,-3), width/height);
+        }
+
+        private void OnCloseInput()
+        {
+            Close();
         }
 
         protected override void OnLoad()
@@ -103,11 +114,12 @@ namespace OpenTK_3D_Renderer
             base.OnResize(e);
 
             GL.Viewport(0, 0, e.Width, e.Height);
+            camera.AspectRatio = Size.X / (float)Size.Y;
         }
 
-        protected override void OnUpdateFrame(FrameEventArgs e)
+        protected override void OnRenderFrame(FrameEventArgs e)
         {
-            base.OnUpdateFrame(e);
+            base.OnRenderFrame(e);
 
             GL.Clear(ClearBufferMask.ColorBufferBit | ClearBufferMask.DepthBufferBit);
 
@@ -119,16 +131,28 @@ namespace OpenTK_3D_Renderer
             mainShader.Use();
             var now = DateTime.UtcNow;
             float time = now.Second+(float)(now.Millisecond) /1000;
-            Matrix4 model = Matrix4.CreateRotationY((float)MathHelper.DegreesToRadians(time*90));
-            Matrix4 view = Matrix4.CreateTranslation(0.0f, 0.0f, -3.0f);
-            Matrix4 projection = Matrix4.CreatePerspectiveFieldOfView(MathHelper.DegreesToRadians(45.0f), Size.X / Size.Y, 0.1f, 100.0f);
+            Matrix4 model = Matrix4.CreateRotationX((float)MathHelper.DegreesToRadians(time*30));
             mainShader.SetMatrix4("model", model);
-            mainShader.SetMatrix4("view", view);
-            mainShader.SetMatrix4("projection", projection);
+            mainShader.SetMatrix4("view", camera.GetViewMatrix());
+            mainShader.SetMatrix4("projection", camera.GetProjectionMatrix());
             GL.BindVertexArray(vertexArrayObject);
             GL.DrawArrays(PrimitiveType.Triangles, 0, 36);
 
             SwapBuffers();
+        }
+
+        protected override void OnUpdateFrame(FrameEventArgs e)
+        {
+            base.OnUpdateFrame(e);
+
+            if (!IsFocused)
+            {
+                return;
+            }
+
+            float deltaTime = (float)e.Time;
+            input.Update();
+            camera.Update(input, deltaTime);
         }
     }
 }
