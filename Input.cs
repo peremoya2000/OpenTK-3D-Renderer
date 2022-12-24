@@ -8,11 +8,16 @@ namespace OpenTK_3D_Renderer
         public Vector3 CameraMovement { get; private set; }
         public Vector2 CameraLookInput { get; private set; }
 
+        public bool FreeLookActive { get; private set; } = true;
+
         public delegate void CloseEventHandler();
         public event CloseEventHandler OnClose;
 
-        private KeyboardState keyboard;
-        private MouseState mouse;
+        public delegate void ResetCameraEventHandler();
+        public event ResetCameraEventHandler OnResetCamera;
+
+        private readonly KeyboardState keyboard;
+        private readonly MouseState mouse;
         private Vector2 lastMousePos;
         public Input(KeyboardState keyboard, MouseState mouse)
         {
@@ -64,10 +69,26 @@ namespace OpenTK_3D_Renderer
             }
 
             CameraMovement.Normalize();
+
+            if (keyboard.IsKeyPressed(Keys.R))
+            {
+                OnResetCamera?.Invoke();
+            }
         }
 
         private void UpdateLook()
         {
+            if (keyboard.IsKeyPressed(Keys.Space))
+            {
+                FreeLookActive = !FreeLookActive;
+            }
+
+            if (!FreeLookActive)
+            {
+                CameraLookInput = (0, 0);
+                return;
+            }
+
             float deltaX = mouse.X - lastMousePos.X;
             float deltaY = mouse.Y - lastMousePos.Y;
             lastMousePos = (mouse.X, mouse.Y);

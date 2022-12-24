@@ -67,7 +67,7 @@ namespace OpenTK_3D_Renderer
             input = new Input(KeyboardState, MouseState);
             input.OnClose += OnCloseInput;
             CursorState = CursorState.Grabbed;
-            camera = new Camera(new Vector3(0,0,-3), width/height);
+            camera = new Camera(new Vector3(0,0,-3), width/height, input);
         }
 
         private void OnCloseInput()
@@ -152,7 +152,7 @@ namespace OpenTK_3D_Renderer
 
             float deltaTime = (float)e.Time;
             input.Update();
-            camera.Update(input, deltaTime);
+            camera.Update(deltaTime);
         }
     }
 }

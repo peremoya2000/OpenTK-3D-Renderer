@@ -15,17 +15,22 @@ namespace OpenTK_3D_Renderer
         private Vector3 up = Vector3.UnitY;
         private Vector3 right = Vector3.UnitX;
 
-        // Rotation around the X axis (radians)
-        private float pitchRad ;
         // Rotation around the Y axis (radians)
-        private float yawRad = -MathHelper.PiOver2;
+        private float pitchRad = 0;
+        // Rotation around the X axis (radians)
+        private float yawRad = MathHelper.PiOver2;
         // The field of view of the camera (radians)
         private float fovRad = MathHelper.PiOver2;
+        private bool freeLook = true;
 
-        public Camera(Vector3 position, float aspectRatio)
+        private readonly Input input;
+
+        public Camera(Vector3 position, float aspectRatio, Input inp)
         {
             Position = position;
             AspectRatio = aspectRatio;
+            input = inp;
+            input.OnResetCamera += ResetCamera;
         }
 
         public Vector3 Position { get; private set; }
@@ -57,7 +62,7 @@ namespace OpenTK_3D_Renderer
             }
         }
 
-        public void Update(Input input, float deltaTime)
+        public void Update(float deltaTime)
         {
             Vector3 movement = input.CameraMovement;
 
@@ -76,8 +81,16 @@ namespace OpenTK_3D_Renderer
             Position += up * movement.Y * deltaTime;
             Position += right * movement.X * deltaTime;
 
-            yaw += input.CameraLookInput.X * lookSpeed;
-            pitch += input.CameraLookInput.Y * lookSpeed;
+            freeLook = input.FreeLookActive;
+            if (freeLook)
+            {
+                yaw += input.CameraLookInput.X * lookSpeed;
+                pitch += input.CameraLookInput.Y * lookSpeed;
+            }
+            else
+            {
+                UpdateVectors();
+            }
         }
 
         public Matrix4 GetViewMatrix()
@@ -92,13 +105,27 @@ namespace OpenTK_3D_Renderer
 
         private void UpdateVectors()
         {
-            front.X = MathF.Cos(pitchRad) * MathF.Cos(yawRad);
-            front.Y = MathF.Sin(pitchRad);
-            front.Z = MathF.Cos(pitchRad) * MathF.Sin(yawRad);
+            if (freeLook)
+            {
+                front.X = MathF.Cos(pitchRad) * MathF.Cos(yawRad);
+                front.Y = MathF.Sin(pitchRad);
+                front.Z = MathF.Cos(pitchRad) * MathF.Sin(yawRad);
+            }
+            else
+            {
+                front = -Position;
+            }
 
             front = Vector3.Normalize(front);
             right = Vector3.Normalize(Vector3.Cross(front, Vector3.UnitY));
             up = Vector3.Normalize(Vector3.Cross(right, front));
+        }
+
+        private void ResetCamera()
+        {
+            Position = (0, 0, -3);
+            yawRad = MathHelper.PiOver2;
+            pitch = 0;
         }
     }
 }
