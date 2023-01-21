@@ -3,7 +3,7 @@ using System;
 
 namespace OpenTK_3D_Renderer
 {
-    
+
     public class Camera
     {
         private float movementSpeed = 0;
@@ -77,11 +77,16 @@ namespace OpenTK_3D_Renderer
             }
             movement *= movementSpeed;
 
+            freeLook = input.FreeLookActive;
+            if (!freeLook)
+            {
+                movement = ClampSphereMovement(movement);
+            }
+
             Position += front * movement.Z * deltaTime;
             Position += up * movement.Y * deltaTime;
             Position += right * movement.X * deltaTime;
 
-            freeLook = input.FreeLookActive;
             if (freeLook)
             {
                 yaw += input.CameraLookInput.X * lookSpeed;
@@ -91,6 +96,19 @@ namespace OpenTK_3D_Renderer
             {
                 UpdateVectors();
             }
+        }
+
+        private Vector3 ClampSphereMovement(Vector3 movement)
+        {
+            if (MathF.Abs(front.Y) >= .95f)
+            {
+                if (Vector3.Dot(movement, front) < 0)
+                {
+                    movement *= (1, 0, 1);
+                }
+            }
+
+            return movement;
         }
 
         public Matrix4 GetViewMatrix()
