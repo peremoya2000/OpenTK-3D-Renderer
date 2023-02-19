@@ -55,6 +55,12 @@ namespace OpenTK_3D_Renderer
             GL.Uniform1(uniformLocations[name], data);
         }
 
+        public void SetMatrix3(string name, Matrix3 data)
+        {
+            GL.UseProgram(Handle);
+            GL.UniformMatrix3(uniformLocations[name], true, ref data);
+        }
+
         public void SetMatrix4(string name, Matrix4 data)
         {
             GL.UseProgram(Handle);
