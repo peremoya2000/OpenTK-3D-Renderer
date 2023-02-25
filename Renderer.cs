@@ -146,6 +146,7 @@ namespace OpenTK_3D_Renderer
             mainShader.SetMatrix3("normalRot", normalRot);
             mainShader.SetMatrix4("view", camera.GetViewMatrix());
             mainShader.SetMatrix4("projection", camera.GetProjectionMatrix());
+            mainShader.SetVector3("viewPos", camera.Position);
             GL.BindVertexArray(vertexArrayObject);
             GL.DrawArrays(PrimitiveType.Triangles, 0, 36);
 
