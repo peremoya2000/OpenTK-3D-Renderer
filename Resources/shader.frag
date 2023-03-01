@@ -1,16 +1,44 @@
 ﻿#version 420
+const float ambWeight = .2;
+const float diffWeight = 1-ambWeight;
+const float specWeight = diffWeight;
+
 out vec4 fragColor;
 in vec2 texCoord;
 in vec3 fragWorldPos;
 in vec3 normal;
+
+struct Material {
+    vec3 ambient;
+    vec3 diffuse;
+    vec3 specular;
+
+    float shininess; //Shininess is the power the specular light is raised to
+};
+
+struct Light {
+    vec3 direction;
+    vec3 color;
+};
+
 uniform sampler2D texture0;
-uniform vec3 lightDir;
+uniform Light light;
+uniform Material material;
 uniform vec3 viewPos;
 void main()
 {
-    float diffuse = max(0, dot(normal, -lightDir));
+    vec3 surfaceColor = texture(texture0, texCoord).xyz;
+
+    vec3 ambient = light.color * material.ambient * surfaceColor;
+
+    float diffIntensity = max(dot(normal, light.direction), 0.0);
+    vec3 diffuse = light.color * (diffIntensity * surfaceColor * material.diffuse);
+
     vec3 viewDir = normalize(viewPos - fragWorldPos);
-    vec3 reflectDir = reflect(lightDir, normal);
-    float specular = pow(max(dot(viewDir, reflectDir), 0.0), 32);
-    fragColor = texture(texture0, texCoord) * diffuse + .4 * specular;
+    vec3 reflectDir = reflect(-light.direction, normal);
+    float specIntensity = pow(max(dot(viewDir, reflectDir), 0.0), material.shininess);
+    vec3 specular = light.color * (specIntensity * material.specular);
+
+    vec3 result = ambient*ambWeight + diffuse*diffWeight + specular*specWeight;
+    fragColor = vec4(result, 1.0);
 }

@@ -99,7 +99,12 @@ namespace OpenTK_3D_Renderer
             mainShader = new Shader(Project.Resources + "shader.vert", Project.Resources + "shader.frag");
             mainShader.Use();
 
-            mainShader.SetVector3("lightDir", Vector3.UnitZ);
+            mainShader.SetVector3("light.direction", -Vector3.UnitZ);
+            mainShader.SetVector3("light.color", Vector3.One);
+            mainShader.SetVector3("material.ambient", Vector3.One);
+            mainShader.SetVector3("material.diffuse", Vector3.One);
+            mainShader.SetVector3("material.specular", Vector3.One);
+            mainShader.SetFloat("material.shininess", 32.0f);
             var normalLocation = mainShader.GetAttribLocation("aNormal");
             GL.EnableVertexAttribArray(normalLocation);
             GL.VertexAttribPointer(normalLocation, 3, VertexAttribPointerType.Float, false, 8 * sizeof(float), 3 * sizeof(float));
