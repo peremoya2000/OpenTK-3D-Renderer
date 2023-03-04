@@ -101,9 +101,8 @@ namespace OpenTK_3D_Renderer
 
             mainShader.SetVector3("light.direction", -Vector3.UnitZ);
             mainShader.SetVector3("light.color", Vector3.One);
-            mainShader.SetVector3("material.ambient", Vector3.One);
-            mainShader.SetVector3("material.diffuse", Vector3.One);
-            mainShader.SetVector3("material.specular", Vector3.One);
+            mainShader.SetVector3("material.ambientTint", Vector3.One);
+            mainShader.SetVector3("material.diffuseTint", Vector3.One);
             mainShader.SetFloat("material.shininess", 32.0f);
             var normalLocation = mainShader.GetAttribLocation("aNormal");
             GL.EnableVertexAttribArray(normalLocation);
@@ -112,7 +111,7 @@ namespace OpenTK_3D_Renderer
             int texCoordLocation = mainShader.GetAttribLocation("aTexCoord");
             GL.EnableVertexAttribArray(texCoordLocation);
             GL.VertexAttribPointer(texCoordLocation, 2, VertexAttribPointerType.Float, false, 8 * sizeof(float), 6 * sizeof(float));
-            mainTex = new Texture(Project.Resources + "tempTexture.jpg");
+            mainTex = new Texture(Project.Resources + "crateTex.png");
         }
 
         protected override void OnUnload()
