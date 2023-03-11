@@ -71,6 +71,12 @@ namespace OpenTK_3D_Renderer
         {
             GL.UseProgram(Handle);
             GL.Uniform3(uniformLocations[name], data);
+        } 
+        
+        public void SetVector4(string name, Vector4 data)
+        {
+            GL.UseProgram(Handle);
+            GL.Uniform4(uniformLocations[name], data);
         }
 
         protected virtual void Dispose(bool disposing)

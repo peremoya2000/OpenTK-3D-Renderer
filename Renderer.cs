@@ -99,8 +99,12 @@ namespace OpenTK_3D_Renderer
             mainShader = new Shader(Project.Resources + "shader.vert", Project.Resources + "shader.frag");
             mainShader.Use();
 
-            mainShader.SetVector3("light.direction", -Vector3.UnitZ);
-            mainShader.SetVector3("light.color", Vector3.One);
+            mainShader.SetVector4("lights[0].vector", new Vector4(0,0,-1,0));
+            mainShader.SetVector3("lights[0].color", Vector3.UnitX);
+            mainShader.SetVector4("lights[1].vector", new Vector4(0, -5, 0, 1));
+            mainShader.SetVector3("lights[1].color", Vector3.UnitZ);
+            mainShader.SetFloat("lights[1].intensity", 1);
+            mainShader.SetFloat("lights[1].radius", 50);
             mainShader.SetVector3("material.ambientTint", Vector3.One);
             mainShader.SetVector3("material.diffuseTint", Vector3.One);
             mainShader.SetFloat("material.shininess", 32.0f);
