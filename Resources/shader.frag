@@ -25,6 +25,7 @@ struct Light {
 };
 
 uniform Light[MAX_LIGHTS] lights;
+uniform float lightCount;
 uniform Material material;
 uniform vec3 viewPos;
 
@@ -90,7 +91,7 @@ void main()
     vec4 texData = texture(material.mainTex, texCoord);
     vec3 result;
 
-    for(int i = 0; i < MAX_LIGHTS; ++i)
+    for(int i = 0; i < min(MAX_LIGHTS, lightCount); ++i)
     {
         if(lights[i].vector.w==0)
         {

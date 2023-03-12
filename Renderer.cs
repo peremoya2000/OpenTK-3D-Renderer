@@ -4,6 +4,7 @@ using OpenTK.Windowing.Common;
 using OpenTK.Windowing.Desktop;
 using OpenTK.Windowing.GraphicsLibraryFramework;
 using System;
+using System.Collections.Generic;
 
 namespace OpenTK_3D_Renderer
 {
@@ -54,6 +55,7 @@ namespace OpenTK_3D_Renderer
             -0.5f,  0.5f,  0.5f,  0.0f,  1.0f,  0.0f,  0.0f, 0.0f,
             -0.5f,  0.5f, -0.5f,  0.0f,  1.0f,  0.0f,  0.0f, 1.0f
         };
+        private List<Light> lights = new List<Light>();
 
         //TODO: Go back to using elementBufferObjects
         private int vertexBufferObject, elementBufferObject;
@@ -99,12 +101,9 @@ namespace OpenTK_3D_Renderer
             mainShader = new Shader(Project.Resources + "shader.vert", Project.Resources + "shader.frag");
             mainShader.Use();
 
-            mainShader.SetVector4("lights[0].vector", new Vector4(0,0,-1,0));
-            mainShader.SetVector3("lights[0].color", Vector3.UnitX);
-            mainShader.SetVector4("lights[1].vector", new Vector4(0, -5, 0, 1));
-            mainShader.SetVector3("lights[1].color", Vector3.UnitZ);
-            mainShader.SetFloat("lights[1].intensity", 1);
-            mainShader.SetFloat("lights[1].radius", 50);
+            AddLight(new DirectionalLight(-Vector3.UnitZ, Vector3.UnitX));
+            AddLight(new PointLight(new Vector3(0, -5, 0), Vector3.UnitZ, 50));
+   
             mainShader.SetVector3("material.ambientTint", Vector3.One);
             mainShader.SetVector3("material.diffuseTint", Vector3.One);
             mainShader.SetFloat("material.shininess", 32.0f);
@@ -173,6 +172,49 @@ namespace OpenTK_3D_Renderer
             float deltaTime = (float)e.Time;
             input.Update();
             camera.Update(deltaTime);
+        }
+
+        private void AddLight(Light l)
+        {
+            lights.Add(l);
+            UpdateLights();
+        }
+
+        private void RemoveLight(Light l)
+        {
+            lights.Remove(l);
+            UpdateLights();
+        }
+
+        private void ClearLights()
+        {
+            lights.Clear();
+            UpdateLights();
+        }
+
+        private void UpdateLights()
+        {
+            for (byte i = 0; i < lights.Count; ++i)
+            {
+                string lightUniform = "lights[" + i + "]";
+
+                switch (lights[i])
+                {
+                    case DirectionalLight directional:
+                        mainShader.SetVector4(lightUniform + ".vector", directional.InternalVector);
+                        mainShader.SetVector3(lightUniform + ".color", directional.Color);
+                        mainShader.SetFloat(lightUniform + ".intensity", directional.Intensity);
+                        break;
+
+                    case PointLight point:
+                        mainShader.SetVector4(lightUniform + ".vector", point.InternalVector);
+                        mainShader.SetVector3(lightUniform + ".color", point.Color);
+                        mainShader.SetFloat(lightUniform + ".intensity", point.Intensity);
+                        mainShader.SetFloat(lightUniform + ".radius", point.Radius);
+                        break;
+                }
+            }
+            mainShader.SetFloat("lightCount", lights.Count);
         }
     }
 }
