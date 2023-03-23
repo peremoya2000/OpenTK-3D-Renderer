@@ -3,3 +3,5 @@
 *.user
 *.sln.docstates
 **/Debug
+*.cache
+**/DesignTimeBuild

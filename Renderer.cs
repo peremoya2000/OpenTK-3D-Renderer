@@ -12,52 +12,48 @@ namespace OpenTK_3D_Renderer
     {
         private float[] vertices =
         {
-            // Positions          Normals              Texture coords
-            -0.5f, -0.5f, -0.5f,  0.0f,  0.0f, -1.0f,  0.0f, 0.0f,
-             0.5f, -0.5f, -0.5f,  0.0f,  0.0f, -1.0f,  1.0f, 0.0f,
-             0.5f,  0.5f, -0.5f,  0.0f,  0.0f, -1.0f,  1.0f, 1.0f,
-             0.5f,  0.5f, -0.5f,  0.0f,  0.0f, -1.0f,  1.0f, 1.0f,
-            -0.5f,  0.5f, -0.5f,  0.0f,  0.0f, -1.0f,  0.0f, 1.0f,
-            -0.5f, -0.5f, -0.5f,  0.0f,  0.0f, -1.0f,  0.0f, 0.0f,
-
-            -0.5f, -0.5f,  0.5f,  0.0f,  0.0f,  1.0f,  0.0f, 0.0f,
-             0.5f, -0.5f,  0.5f,  0.0f,  0.0f,  1.0f,  1.0f, 0.0f,
-             0.5f,  0.5f,  0.5f,  0.0f,  0.0f,  1.0f,  1.0f, 1.0f,
-             0.5f,  0.5f,  0.5f,  0.0f,  0.0f,  1.0f,  1.0f, 1.0f,
-            -0.5f,  0.5f,  0.5f,  0.0f,  0.0f,  1.0f,  0.0f, 1.0f,
-            -0.5f, -0.5f,  0.5f,  0.0f,  0.0f,  1.0f,  0.0f, 0.0f,
-
-            -0.5f,  0.5f,  0.5f, -1.0f,  0.0f,  0.0f,  1.0f, 0.0f,
-            -0.5f,  0.5f, -0.5f, -1.0f,  0.0f,  0.0f,  1.0f, 1.0f,
-            -0.5f, -0.5f, -0.5f, -1.0f,  0.0f,  0.0f,  0.0f, 1.0f,
-            -0.5f, -0.5f, -0.5f, -1.0f,  0.0f,  0.0f,  0.0f, 1.0f,
-            -0.5f, -0.5f,  0.5f, -1.0f,  0.0f,  0.0f,  0.0f, 0.0f,
-            -0.5f,  0.5f,  0.5f, -1.0f,  0.0f,  0.0f,  1.0f, 0.0f,
-
-             0.5f,  0.5f,  0.5f,  1.0f,  0.0f,  0.0f,  1.0f, 0.0f,
-             0.5f,  0.5f, -0.5f,  1.0f,  0.0f,  0.0f,  1.0f, 1.0f,
-             0.5f, -0.5f, -0.5f,  1.0f,  0.0f,  0.0f,  0.0f, 1.0f,
-             0.5f, -0.5f, -0.5f,  1.0f,  0.0f,  0.0f,  0.0f, 1.0f,
-             0.5f, -0.5f,  0.5f,  1.0f,  0.0f,  0.0f,  0.0f, 0.0f,
-             0.5f,  0.5f,  0.5f,  1.0f,  0.0f,  0.0f,  1.0f, 0.0f,
-
-            -0.5f, -0.5f, -0.5f,  0.0f, -1.0f,  0.0f,  0.0f, 1.0f,
-             0.5f, -0.5f, -0.5f,  0.0f, -1.0f,  0.0f,  1.0f, 1.0f,
-             0.5f, -0.5f,  0.5f,  0.0f, -1.0f,  0.0f,  1.0f, 0.0f,
-             0.5f, -0.5f,  0.5f,  0.0f, -1.0f,  0.0f,  1.0f, 0.0f,
-            -0.5f, -0.5f,  0.5f,  0.0f, -1.0f,  0.0f,  0.0f, 0.0f,
-            -0.5f, -0.5f, -0.5f,  0.0f, -1.0f,  0.0f,  0.0f, 1.0f,
-
-            -0.5f,  0.5f, -0.5f,  0.0f,  1.0f,  0.0f,  0.0f, 1.0f,
-             0.5f,  0.5f, -0.5f,  0.0f,  1.0f,  0.0f,  1.0f, 1.0f,
-             0.5f,  0.5f,  0.5f,  0.0f,  1.0f,  0.0f,  1.0f, 0.0f,
-             0.5f,  0.5f,  0.5f,  0.0f,  1.0f,  0.0f,  1.0f, 0.0f,
-            -0.5f,  0.5f,  0.5f,  0.0f,  1.0f,  0.0f,  0.0f, 0.0f,
-            -0.5f,  0.5f, -0.5f,  0.0f,  1.0f,  0.0f,  0.0f, 1.0f
+            -0.5f, -0.5f, -0.5f, 0, 0, -1, 0, 0,
+            0.5f, -0.5f, -0.5f, 0, 0, -1, 1, 0,
+            0.5f, 0.5f, -0.5f, 0, 0, -1, 1, 1,
+            -0.5f, 0.5f, -0.5f, 0, 0, -1, 0, 1,
+            -0.5f, -0.5f, 0.5f, 0, 0, 1, 0, 0,
+            0.5f, -0.5f, 0.5f, 0, 0, 1, 1, 0,
+            0.5f, 0.5f, 0.5f, 0, 0, 1, 1, 1,
+            -0.5f, 0.5f, 0.5f, 0, 0, 1, 0, 1,
+            -0.5f, 0.5f, 0.5f, -1, 0, 0, 1, 0,
+            -0.5f, 0.5f, -0.5f, -1, 0, 0, 1, 1,
+            -0.5f, -0.5f, -0.5f, -1, 0, 0, 0, 1,
+            -0.5f, -0.5f, 0.5f, -1, 0, 0, 0, 0,
+            0.5f, 0.5f, 0.5f, 1, 0, 0, 1, 0,
+            0.5f, 0.5f, -0.5f, 1, 0, 0, 1, 1,
+            0.5f, -0.5f, -0.5f, 1, 0, 0, 0, 1,
+            0.5f, -0.5f, 0.5f, 1, 0, 0, 0, 0,
+            -0.5f, -0.5f, -0.5f, 0, -1, 0, 0, 1,
+            0.5f, -0.5f, -0.5f, 0, -1, 0, 1, 1,
+            0.5f, -0.5f, 0.5f, 0, -1, 0, 1, 0,
+            -0.5f, -0.5f, 0.5f, 0, -1, 0, 0, 0,
+            -0.5f, 0.5f, -0.5f, 0, 1, 0, 0, 1,
+            0.5f, 0.5f, -0.5f, 0, 1, 0, 1, 1,
+            0.5f, 0.5f, 0.5f, 0, 1, 0, 1, 0,
+            -0.5f, 0.5f, 0.5f, 0, 1, 0, 0, 0
         };
-        private List<Light> lights = new List<Light>();
+        private uint[] indices =
+        {
+            0, 1, 2,
+            2, 3, 0,
+            4, 5, 6,
+            6, 7, 4,
+            8, 9, 10,
+            10, 11, 8,
+            12, 13, 14,
+            14, 15, 12,
+            16, 17, 18,
+            18, 19, 16,
+            20, 21, 22,
+            22, 23, 20
+        };
+        private readonly List<Light> lights = new List<Light>();
 
-        //TODO: Go back to using elementBufferObjects
         private int vertexBufferObject, elementBufferObject;
         private int vertexArrayObject;
         private Shader mainShader;
@@ -72,7 +68,7 @@ namespace OpenTK_3D_Renderer
             input = new Input(KeyboardState, MouseState);
             input.OnClose += OnCloseInput;
             CursorState = CursorState.Grabbed;
-            camera = new Camera(new Vector3(0,0,-3), width/height, input);
+            camera = new Camera(new Vector3(0, 0, -3), width / height, input);
         }
 
         private void OnCloseInput()
@@ -87,7 +83,6 @@ namespace OpenTK_3D_Renderer
             GL.ClearColor(0.2f, 0.3f, 0.3f, 1.0f);
             GL.Enable(EnableCap.DepthTest);
 
-
             vertexBufferObject = GL.GenBuffer();
             GL.BindBuffer(BufferTarget.ArrayBuffer, vertexBufferObject);
             GL.BufferData(BufferTarget.ArrayBuffer, vertices.Length * sizeof(float), vertices, BufferUsageHint.StaticDraw);
@@ -98,12 +93,16 @@ namespace OpenTK_3D_Renderer
             GL.VertexAttribPointer(0, 3, VertexAttribPointerType.Float, false, 8 * sizeof(float), 0);
             GL.EnableVertexAttribArray(0);
 
+            elementBufferObject = GL.GenBuffer();
+            GL.BindBuffer(BufferTarget.ElementArrayBuffer, elementBufferObject);
+            GL.BufferData(BufferTarget.ElementArrayBuffer, indices.Length * sizeof(uint), indices, BufferUsageHint.StaticDraw);
+
             mainShader = new Shader(Project.Resources + "shader.vert", Project.Resources + "shader.frag");
             mainShader.Use();
 
             AddLight(new DirectionalLight(-Vector3.UnitZ, Vector3.UnitX));
             AddLight(new PointLight(new Vector3(0, -5, 0), Vector3.UnitZ, 50));
-   
+
             mainShader.SetVector3("material.ambientTint", Vector3.One);
             mainShader.SetVector3("material.diffuseTint", Vector3.One);
             mainShader.SetFloat("material.shininess", 32.0f);
@@ -145,8 +144,8 @@ namespace OpenTK_3D_Renderer
 
             mainShader.Use();
             var now = DateTime.UtcNow;
-            float time = 60*now.Minute+now.Second+(float)(now.Millisecond) /1000;
-            Matrix4 model = Matrix4.CreateRotationX((float)MathHelper.DegreesToRadians(time*30));
+            float time = 60 * now.Minute + now.Second + (float)(now.Millisecond) / 1000;
+            Matrix4 model = Matrix4.CreateRotationX((float)MathHelper.DegreesToRadians(time * 30));
             mainShader.SetMatrix4("model", model);
 
             Matrix3 normalRot = new Matrix3(Matrix4.Transpose(model.Inverted()));
@@ -155,7 +154,7 @@ namespace OpenTK_3D_Renderer
             mainShader.SetMatrix4("projection", camera.GetProjectionMatrix());
             mainShader.SetVector3("viewPos", camera.Position);
             GL.BindVertexArray(vertexArrayObject);
-            GL.DrawArrays(PrimitiveType.Triangles, 0, 36);
+            GL.DrawElements(PrimitiveType.Triangles, indices.Length, DrawElementsType.UnsignedInt, 0);
 
             SwapBuffers();
         }
@@ -174,9 +173,9 @@ namespace OpenTK_3D_Renderer
             camera.Update(deltaTime);
         }
 
-        private void AddLight(Light l)
+        private void AddLight(Light light)
         {
-            lights.Add(l);
+            lights.Add(light);
             UpdateLights();
         }
 
