@@ -28,19 +28,24 @@ namespace OpenTK_3D_Renderer
                 }
 
             }
-            PrintVertexBuffer();
-            PrintIndexBuffer();
-            return GetVertexBuffer();
+            //PrintVertexBuffer();
+            //PrintIndexBuffer();
+            Console.WriteLine("Previous vert count: " + vertices.Length / vertexSize + ". Simplified vert count: " + vertexBuffer.Count);
+            return GetVertexBuffer(vertexSize);
         }
 
-        public static float[] GetVertexBuffer()
+        public static float[] GetVertexBuffer(int vertSize)
         {
-            List<float> unifiedVertexBuffer = new List<float>();
-            foreach (float[] vert in vertexBuffer)
+            float[] unifiedVertexBuffer = new float[vertexBuffer.Count * vertSize];
+            for (int i = 0; i < vertexBuffer.Count; ++i)
             {
-                unifiedVertexBuffer.AddRange(vert);
+                float[] vert = vertexBuffer[i];
+                for (int j = 0; j < vertSize; ++j)
+                {
+                    unifiedVertexBuffer[vertSize * i + j] = vert[j];
+                }
             }
-            return unifiedVertexBuffer.ToArray();
+            return unifiedVertexBuffer;
         }
         public static uint[] GetIndexBuffer()
         {
@@ -55,8 +60,21 @@ namespace OpenTK_3D_Renderer
                 var tVertex = vertexBuffer[index..(index + vertexSize)];
                 result.AddRange(tVertex);
             }
-            Console.WriteLine("VB Length is: "+result.Count);
+            Console.WriteLine("VB Length is: " + result.Count);
             return result.ToArray();
+        }
+
+        public static uint[] GetGenericIndexBuffer(float[] vertexBuffer, int vertexSize)
+        {
+            int size = (int)(vertexBuffer.Length / vertexSize);
+            uint[] result = new uint[size];
+
+            for (uint i = 0; i < size; ++i)
+            {
+                result[i] = i;
+            }
+
+            return result;
         }
 
         private static void PrintVertexBuffer()
@@ -85,19 +103,12 @@ namespace OpenTK_3D_Renderer
 
         private static int GetVertIndex(float[] newVert)
         {
-            for (int i = 0; i < vertexBuffer.Count; i++)
-            {
-                if (AreIdentical(newVert, vertexBuffer[i]))
-                {
-                    return i;
-                }
-            }
-            return -1;
+            return vertexBuffer.FindIndex(0, v => AreIdentical(v, newVert));
         }
         private static bool AreIdentical(float[] arr0, float[] arr1)
         {
             int length = Math.Min(arr0.Length, arr1.Length);
-            for (int i = 0; i < length; i++)
+            for (int i = 0; i < length; ++i)
             {
                 if (arr0[i] != arr1[i])
                 {

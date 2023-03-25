@@ -83,6 +83,10 @@ namespace OpenTK_3D_Renderer
             GL.ClearColor(0.2f, 0.3f, 0.3f, 1.0f);
             GL.Enable(EnableCap.DepthTest);
 
+            float[] rawData = ModelImporter.Import(Project.Resources+"monkey.obj");
+            vertices = ModelFormatConverter.SimplifyToIndexFormat(rawData, 8);
+            indices = ModelFormatConverter.GetIndexBuffer();
+
             vertexBufferObject = GL.GenBuffer();
             GL.BindBuffer(BufferTarget.ArrayBuffer, vertexBufferObject);
             GL.BufferData(BufferTarget.ArrayBuffer, vertices.Length * sizeof(float), vertices, BufferUsageHint.StaticDraw);
