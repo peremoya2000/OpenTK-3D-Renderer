@@ -7,7 +7,7 @@ using System.IO;
 
 namespace OpenTK_3D_Renderer
 {
-    class Texture
+    public class Texture
     {
         private int Handle;
         private ImageResult image;

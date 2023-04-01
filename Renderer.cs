@@ -10,56 +10,10 @@ namespace OpenTK_3D_Renderer
 {
     public class Renderer : GameWindow
     {
-        private float[] vertices =
-        {
-            -0.5f, -0.5f, -0.5f, 0, 0, -1, 0, 0,
-            0.5f, -0.5f, -0.5f, 0, 0, -1, 1, 0,
-            0.5f, 0.5f, -0.5f, 0, 0, -1, 1, 1,
-            -0.5f, 0.5f, -0.5f, 0, 0, -1, 0, 1,
-            -0.5f, -0.5f, 0.5f, 0, 0, 1, 0, 0,
-            0.5f, -0.5f, 0.5f, 0, 0, 1, 1, 0,
-            0.5f, 0.5f, 0.5f, 0, 0, 1, 1, 1,
-            -0.5f, 0.5f, 0.5f, 0, 0, 1, 0, 1,
-            -0.5f, 0.5f, 0.5f, -1, 0, 0, 1, 0,
-            -0.5f, 0.5f, -0.5f, -1, 0, 0, 1, 1,
-            -0.5f, -0.5f, -0.5f, -1, 0, 0, 0, 1,
-            -0.5f, -0.5f, 0.5f, -1, 0, 0, 0, 0,
-            0.5f, 0.5f, 0.5f, 1, 0, 0, 1, 0,
-            0.5f, 0.5f, -0.5f, 1, 0, 0, 1, 1,
-            0.5f, -0.5f, -0.5f, 1, 0, 0, 0, 1,
-            0.5f, -0.5f, 0.5f, 1, 0, 0, 0, 0,
-            -0.5f, -0.5f, -0.5f, 0, -1, 0, 0, 1,
-            0.5f, -0.5f, -0.5f, 0, -1, 0, 1, 1,
-            0.5f, -0.5f, 0.5f, 0, -1, 0, 1, 0,
-            -0.5f, -0.5f, 0.5f, 0, -1, 0, 0, 0,
-            -0.5f, 0.5f, -0.5f, 0, 1, 0, 0, 1,
-            0.5f, 0.5f, -0.5f, 0, 1, 0, 1, 1,
-            0.5f, 0.5f, 0.5f, 0, 1, 0, 1, 0,
-            -0.5f, 0.5f, 0.5f, 0, 1, 0, 0, 0
-        };
-        private uint[] indices =
-        {
-            0, 1, 2,
-            2, 3, 0,
-            4, 5, 6,
-            6, 7, 4,
-            8, 9, 10,
-            10, 11, 8,
-            12, 13, 14,
-            14, 15, 12,
-            16, 17, 18,
-            18, 19, 16,
-            20, 21, 22,
-            22, 23, 20
-        };
-        private readonly List<Light> lights = new List<Light>();
-
-        private int vertexBufferObject, elementBufferObject;
-        private int vertexArrayObject;
-        private Shader mainShader;
-        private Texture mainTex;
-        private Input input;
-        private Camera camera;
+        private readonly Input input;
+        private readonly Camera camera;
+        private readonly LightManager lightManager;
+        private readonly List<MeshedObject> renderedMeshes;
 
         public Renderer(int width, int height, string title) : base(GameWindowSettings.Default, new NativeWindowSettings() { Size = (width, height), Title = title })
         {
@@ -69,6 +23,8 @@ namespace OpenTK_3D_Renderer
             input.OnClose += OnCloseInput;
             CursorState = CursorState.Grabbed;
             camera = new Camera(new Vector3(0, 0, -3), width / height, input);
+            lightManager = new LightManager();
+            renderedMeshes = new List<MeshedObject>();
         }
 
         private void OnCloseInput()
@@ -83,48 +39,28 @@ namespace OpenTK_3D_Renderer
             GL.ClearColor(0.2f, 0.3f, 0.3f, 1.0f);
             GL.Enable(EnableCap.DepthTest);
 
-            float[] rawData = ModelImporter.Import(Project.Resources+"monkey.obj");
-            vertices = ModelFormatConverter.SimplifyToIndexFormat(rawData, 8);
-            indices = ModelFormatConverter.GetIndexBuffer();
+            lightManager.AddLight(new PointLight(new Vector3(0, -5, 0), Vector3.UnitZ, 30, 5));
+            lightManager.AddLight(new DirectionalLight(-Vector3.UnitZ, Vector3.UnitX));
 
-            vertexBufferObject = GL.GenBuffer();
-            GL.BindBuffer(BufferTarget.ArrayBuffer, vertexBufferObject);
-            GL.BufferData(BufferTarget.ArrayBuffer, vertices.Length * sizeof(float), vertices, BufferUsageHint.StaticDraw);
-
-
-            vertexArrayObject = GL.GenVertexArray();
-            GL.BindVertexArray(vertexArrayObject);
-            GL.VertexAttribPointer(0, 3, VertexAttribPointerType.Float, false, 8 * sizeof(float), 0);
-            GL.EnableVertexAttribArray(0);
-
-            elementBufferObject = GL.GenBuffer();
-            GL.BindBuffer(BufferTarget.ElementArrayBuffer, elementBufferObject);
-            GL.BufferData(BufferTarget.ElementArrayBuffer, indices.Length * sizeof(uint), indices, BufferUsageHint.StaticDraw);
-
-            mainShader = new Shader(Project.Resources + "shader.vert", Project.Resources + "shader.frag");
-            mainShader.Use();
-
-            AddLight(new DirectionalLight(-Vector3.UnitZ, Vector3.UnitX));
-            AddLight(new PointLight(new Vector3(0, -5, 0), Vector3.UnitZ, 50));
-
-            mainShader.SetVector3("material.ambientTint", Vector3.One);
-            mainShader.SetVector3("material.diffuseTint", Vector3.One);
-            mainShader.SetFloat("material.shininess", 32.0f);
-            var normalLocation = mainShader.GetAttribLocation("aNormal");
-            GL.EnableVertexAttribArray(normalLocation);
-            GL.VertexAttribPointer(normalLocation, 3, VertexAttribPointerType.Float, false, 8 * sizeof(float), 3 * sizeof(float));
-
-            int texCoordLocation = mainShader.GetAttribLocation("aTexCoord");
-            GL.EnableVertexAttribArray(texCoordLocation);
-            GL.VertexAttribPointer(texCoordLocation, 2, VertexAttribPointerType.Float, false, 8 * sizeof(float), 6 * sizeof(float));
-            mainTex = new Texture(Project.Resources + "crateTex.png");
+            Transform t;
+            for (int i = -5; i < 5; ++i)
+            {
+                t = new Transform
+                {
+                    Position = Vector3.UnitX * i * 3
+                };
+                renderedMeshes.Add(new MeshedObject(Project.Resources + "monkey.obj", t));
+            }
         }
 
         protected override void OnUnload()
         {
             base.OnUnload();
 
-            mainShader.Dispose();
+            foreach (MeshedObject obj in renderedMeshes)
+            {
+                obj.Dispose();
+            }
         }
 
         protected override void OnResize(ResizeEventArgs e)
@@ -146,19 +82,17 @@ namespace OpenTK_3D_Renderer
                 Close();
             }
 
-            mainShader.Use();
-            var now = DateTime.UtcNow;
-            float time = 60 * now.Minute + now.Second + (float)(now.Millisecond) / 1000;
-            Matrix4 model = Matrix4.CreateRotationX((float)MathHelper.DegreesToRadians(time * 30));
-            mainShader.SetMatrix4("model", model);
+            //TODO: add normal map support
+            //TODO: add Forward+ capabilities to LightManager
+            //TODO: shadowcasting?
+            //TODO: transparent materials?
 
-            Matrix3 normalRot = new Matrix3(Matrix4.Transpose(model.Inverted()));
-            mainShader.SetMatrix3("normalRot", normalRot);
-            mainShader.SetMatrix4("view", camera.GetViewMatrix());
-            mainShader.SetMatrix4("projection", camera.GetProjectionMatrix());
-            mainShader.SetVector3("viewPos", camera.Position);
-            GL.BindVertexArray(vertexArrayObject);
-            GL.DrawElements(PrimitiveType.Triangles, indices.Length, DrawElementsType.UnsignedInt, 0);
+            for(short i = 0; i< renderedMeshes.Count; ++i)
+            {
+                MeshedObject mesh = renderedMeshes[i];
+                var lights = lightManager.GetRelevantLightForObject(mesh);
+                mesh.Draw(camera, lights);
+            }
 
             SwapBuffers();
         }
@@ -173,51 +107,12 @@ namespace OpenTK_3D_Renderer
             }
 
             float deltaTime = (float)e.Time;
+            foreach (MeshedObject mesh in renderedMeshes)
+            {
+                mesh.Transform.AddRotation(Quaternion.FromAxisAngle(Vector3.UnitY,deltaTime));
+            }
             input.Update();
             camera.Update(deltaTime);
-        }
-
-        private void AddLight(Light light)
-        {
-            lights.Add(light);
-            UpdateLights();
-        }
-
-        private void RemoveLight(Light l)
-        {
-            lights.Remove(l);
-            UpdateLights();
-        }
-
-        private void ClearLights()
-        {
-            lights.Clear();
-            UpdateLights();
-        }
-
-        private void UpdateLights()
-        {
-            for (byte i = 0; i < lights.Count; ++i)
-            {
-                string lightUniform = "lights[" + i + "]";
-
-                switch (lights[i])
-                {
-                    case DirectionalLight directional:
-                        mainShader.SetVector4(lightUniform + ".vector", directional.InternalVector);
-                        mainShader.SetVector3(lightUniform + ".color", directional.Color);
-                        mainShader.SetFloat(lightUniform + ".intensity", directional.Intensity);
-                        break;
-
-                    case PointLight point:
-                        mainShader.SetVector4(lightUniform + ".vector", point.InternalVector);
-                        mainShader.SetVector3(lightUniform + ".color", point.Color);
-                        mainShader.SetFloat(lightUniform + ".intensity", point.Intensity);
-                        mainShader.SetFloat(lightUniform + ".radius", point.Radius);
-                        break;
-                }
-            }
-            mainShader.SetFloat("lightCount", lights.Count);
         }
     }
 }

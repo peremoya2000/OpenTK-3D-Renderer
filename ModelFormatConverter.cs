@@ -8,7 +8,7 @@ namespace OpenTK_3D_Renderer
         private static readonly List<float[]> vertexBuffer = new List<float[]>();
         private static readonly List<uint> indexBuffer = new List<uint>();
 
-        public static float[] SimplifyToIndexFormat(float[] vertices, int vertexSize)
+        public static void SimplifyToIndexFormat(int vertexSize, ref float[] vertices, out uint[] indices)
         {
             vertexBuffer.Clear();
             indexBuffer.Clear();
@@ -31,7 +31,8 @@ namespace OpenTK_3D_Renderer
             //PrintVertexBuffer();
             //PrintIndexBuffer();
             Console.WriteLine("Previous vert count: " + vertices.Length / vertexSize + ". Simplified vert count: " + vertexBuffer.Count);
-            return GetVertexBuffer(vertexSize);
+            vertices = GetVertexBuffer(vertexSize);
+            indices = GetIndexBuffer();
         }
 
         public static float[] GetVertexBuffer(int vertSize)
