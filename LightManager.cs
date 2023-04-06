@@ -1,8 +1,6 @@
-﻿using System;
+﻿using OpenTK.Mathematics;
+using System;
 using System.Collections.Generic;
-using System.Text;
-using OpenTK.Graphics.OpenGL4;
-using OpenTK.Mathematics;
 
 namespace OpenTK_3D_Renderer
 {
@@ -10,7 +8,7 @@ namespace OpenTK_3D_Renderer
     {
         private readonly List<Light> lights = new List<Light>();
 
-        public LightManager() 
+        public LightManager()
         {
         }
 
@@ -19,9 +17,9 @@ namespace OpenTK_3D_Renderer
             lights.Add(light);
         }
 
-        public void RemoveLight(Light l)
+        public void RemoveLight(Light light)
         {
-            lights.Remove(l);
+            lights.Remove(light);
         }
 
         public void ClearLights()
@@ -29,12 +27,38 @@ namespace OpenTK_3D_Renderer
             lights.Clear();
         }
 
-        //TODO: Return only lights that can affect that mesh
         public List<Light> GetRelevantLightForObject(MeshedObject obj)
         {
-            return lights;
+            List<Light> result = new List<Light>();
+            for (short i = 0; i < lights.Count; ++i)
+            {
+                Light light = lights[i];
+                if (light.Type == LightType.PointLight)
+                {
+                    PointLight pointLight = (PointLight)light;
+                    float combinedRadius = pointLight.Radius + obj.GetMeshRadius();
+                    if (ManhattanDistance(pointLight.InternalVector.Xyz, obj.Transform.Position) < combinedRadius)
+                    {
+                        result.Add(pointLight);
+                    }
+                }
+                else
+                {
+                    result.Add(light);
+                }
+                if (result.Count >= Renderer.MaxSimultaneousLights)
+                {
+                    Console.WriteLine("Too many lights together, some are being culled");
+                    return result;
+                }
+            }
+            return result;
         }
 
-        
+        private float ManhattanDistance(Vector3 p1, Vector3 p2)
+        {
+            return MathF.Abs(p1.X - p2.X) + MathF.Abs(p1.Y - p2.Y) + MathF.Abs(p1.Z - p2.Z);
+        }
+
     }
 }

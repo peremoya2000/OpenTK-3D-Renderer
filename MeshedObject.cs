@@ -8,6 +8,7 @@ namespace OpenTK_3D_Renderer
     class MeshedObject
     {
         public Transform Transform;
+        private float meshMaxRadius = 0;
         private float[] vertices;
         private uint[] indices;
         private readonly int vertexBufferObject, elementBufferObject, vertexArrayObject;
@@ -30,6 +31,7 @@ namespace OpenTK_3D_Renderer
 
             vertices = ModelImporter.Import(meshPath);
             ModelFormatConverter.SimplifyToIndexFormat(8, ref vertices, out indices);
+            UpdateMeshRadius();
 
             vertexBufferObject = GL.GenBuffer();
             GL.BindBuffer(BufferTarget.ArrayBuffer, vertexBufferObject);
@@ -64,9 +66,14 @@ namespace OpenTK_3D_Renderer
             material = mat;
         }
 
+        public float GetMeshRadius()
+        {
+            return meshMaxRadius * Transform.Scale;
+        }
+
         public void Dispose()
         {
-            shader.Dispose();    
+            shader.Dispose();
         }
 
         public void Draw(Camera camera, List<Light> lights)
@@ -110,6 +117,23 @@ namespace OpenTK_3D_Renderer
                 }
             }
             shader.SetFloat("lightCount", lights.Count);
+        }
+
+        private void UpdateMeshRadius()
+        {
+            Vector3 maxVert = Vector3.Zero;
+            Vector3 tVert;
+            float maxLengthSquared = 0;
+            for (int i = 0; i < vertices.Length; i += 3)
+            {
+                tVert = new Vector3(vertices[i], vertices[i + 1], vertices[i + 2]);
+                if (tVert.LengthSquared > maxLengthSquared)
+                {
+                    maxLengthSquared = tVert.LengthSquared;
+                    maxVert = tVert;
+                }
+            }
+            meshMaxRadius = maxVert.Length;
         }
     }
 }

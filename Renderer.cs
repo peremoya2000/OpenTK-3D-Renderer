@@ -10,6 +10,7 @@ namespace OpenTK_3D_Renderer
 {
     public class Renderer : GameWindow
     {
+        public readonly static short MaxSimultaneousLights = 16;
         private readonly Input input;
         private readonly Camera camera;
         private readonly LightManager lightManager;
@@ -47,7 +48,7 @@ namespace OpenTK_3D_Renderer
             {
                 t = new Transform
                 {
-                    Position = Vector3.UnitX * i * 3
+                    Position = Vector3.UnitX * i * 5
                 };
                 renderedMeshes.Add(new MeshedObject(Project.Resources + "monkey.obj", t));
             }
@@ -83,7 +84,6 @@ namespace OpenTK_3D_Renderer
             }
 
             //TODO: add normal map support
-            //TODO: add Forward+ capabilities to LightManager
             //TODO: shadowcasting?
             //TODO: transparent materials?
 
