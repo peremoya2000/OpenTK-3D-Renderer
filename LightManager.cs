@@ -27,7 +27,7 @@ namespace OpenTK_3D_Renderer
             lights.Clear();
         }
 
-        public List<Light> GetRelevantLightForObject(MeshedObject obj)
+        public List<Light> GetRelevantLightsForObject(MeshedObject obj)
         {
             List<Light> result = new List<Light>();
             for (short i = 0; i < lights.Count; ++i)

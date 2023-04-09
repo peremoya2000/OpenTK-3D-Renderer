@@ -90,7 +90,7 @@ namespace OpenTK_3D_Renderer
             for(short i = 0; i< renderedMeshes.Count; ++i)
             {
                 MeshedObject mesh = renderedMeshes[i];
-                var lights = lightManager.GetRelevantLightForObject(mesh);
+                var lights = lightManager.GetRelevantLightsForObject(mesh);
                 mesh.Draw(camera, lights);
             }
 

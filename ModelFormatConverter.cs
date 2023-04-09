@@ -104,6 +104,10 @@ namespace OpenTK_3D_Renderer
 
         private static int GetVertIndex(float[] newVert)
         {
+            if (!vertexBuffer.Contains(newVert))
+            {
+                return -1;
+            }
             return vertexBuffer.FindIndex(0, v => AreIdentical(v, newVert));
         }
         private static bool AreIdentical(float[] arr0, float[] arr1)
