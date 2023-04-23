@@ -14,7 +14,14 @@ namespace OpenTK_3D_Renderer
 
         public void AddLight(Light light)
         {
-            lights.Add(light);
+            if (light.Type == LightType.DirectionalLight)
+            {
+                lights.Insert(0, light);
+            }
+            else
+            { 
+                lights.Add(light);
+            }
         }
 
         public void RemoveLight(Light light)
