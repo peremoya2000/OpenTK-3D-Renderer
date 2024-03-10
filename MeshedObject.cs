@@ -76,6 +76,22 @@ namespace OpenTK_3D_Renderer
             shader.Dispose();
         }
 
+        public bool IsInsideCameraFrustum(Camera camera)
+        {
+            float threshold = camera.GetVisibilityLimit();
+            Vector3 cameraToMesh = Transform.Position - camera.Position;
+            float meshRadius = GetMeshRadius();
+            float meshDistance = cameraToMesh.LengthFast;
+            if (meshDistance <= meshRadius)
+            {
+                return true;
+            }
+            Vector3 centerPoint = camera.Front * MathF.Abs(Vector3.Dot(cameraToMesh, camera.Front));
+            cameraToMesh += (Vector3.NormalizeFast(centerPoint - cameraToMesh) * MathF.Min(meshRadius, (centerPoint - cameraToMesh).LengthFast));
+            float meshDotValue = Vector3.Dot(Vector3.Normalize(cameraToMesh), camera.Front);
+            return (meshDotValue >= threshold);
+        }
+
         public void Draw(Camera camera, List<Light> lights)
         {
             UpdateLightsData(lights);

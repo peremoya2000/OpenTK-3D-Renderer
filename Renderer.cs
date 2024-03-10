@@ -3,7 +3,6 @@ using OpenTK.Mathematics;
 using OpenTK.Windowing.Common;
 using OpenTK.Windowing.Desktop;
 using OpenTK.Windowing.GraphicsLibraryFramework;
-using System;
 using System.Collections.Generic;
 
 namespace OpenTK_3D_Renderer
@@ -23,13 +22,17 @@ namespace OpenTK_3D_Renderer
             input = new Input(KeyboardState, MouseState);
             input.OnClose += OnCloseInput;
             CursorState = CursorState.Grabbed;
-            camera = new Camera(new Vector3(0, 0, -3), width / height, input);
+            camera = new Camera(new Vector3(0, 0, -3), input, width / height);
             lightManager = new LightManager();
             renderedMeshes = new List<MeshedObject>();
         }
 
         private void OnCloseInput()
         {
+            if (input != null)
+            {
+                input.OnClose -= OnCloseInput;
+            }
             Close();
         }
 
@@ -69,7 +72,7 @@ namespace OpenTK_3D_Renderer
             base.OnResize(e);
 
             GL.Viewport(0, 0, e.Width, e.Height);
-            camera.AspectRatio = Size.X / (float)Size.Y;
+            camera.SetAspectRatio(Size.X / (float)Size.Y);
         }
 
         protected override void OnRenderFrame(FrameEventArgs e)
@@ -87,11 +90,14 @@ namespace OpenTK_3D_Renderer
             //TODO: shadowcasting?
             //TODO: transparent materials?
 
-            for(short i = 0; i< renderedMeshes.Count; ++i)
+            for (short i = 0; i < renderedMeshes.Count; ++i)
             {
                 MeshedObject mesh = renderedMeshes[i];
-                var lights = lightManager.GetRelevantLightsForObject(mesh);
-                mesh.Draw(camera, lights);
+                if (mesh.IsInsideCameraFrustum(camera))
+                {
+                    var lights = lightManager.GetRelevantLightsForObject(mesh);
+                    mesh.Draw(camera, lights);
+                }
             }
 
             SwapBuffers();
@@ -109,7 +115,7 @@ namespace OpenTK_3D_Renderer
             float deltaTime = (float)e.Time;
             foreach (MeshedObject mesh in renderedMeshes)
             {
-                mesh.Transform.AddRotation(Quaternion.FromAxisAngle(Vector3.UnitY,deltaTime));
+                mesh.Transform.AddRotation(Quaternion.FromAxisAngle(Vector3.UnitY, deltaTime));
             }
             input.Update();
             camera.Update(deltaTime);

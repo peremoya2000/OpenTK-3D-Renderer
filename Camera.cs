@@ -23,19 +23,24 @@ namespace OpenTK_3D_Renderer
         private float fovRad = MathHelper.PiOver2;
         private bool freeLook = true;
 
+        private Matrix4 cachedProjectionMatrix = Matrix4.Identity;
+
         private readonly Input input;
 
-        public Camera(Vector3 position, float aspectRatio, Input inp)
+        public Camera(Vector3 position, Input inp, float aspectRatio, float verticalFov = 90)
         {
             Position = position;
-            AspectRatio = aspectRatio;
+            this.aspectRatio = aspectRatio;
             input = inp;
             input.OnResetCamera += ResetCamera;
+            fovRad = MathHelper.DegreesToRadians(verticalFov);
+            cachedProjectionMatrix = CalculateProjectionMatrix();
         }
 
         public Vector3 Position { get; private set; }
 
-        public float AspectRatio { private get; set; }
+        private float aspectRatio;
+        private float cachedVisibilityLimit;
 
         public Vector3 Front => front;
         public Vector3 Up => up;
@@ -60,6 +65,22 @@ namespace OpenTK_3D_Renderer
                 yawRad = MathHelper.DegreesToRadians(value);
                 UpdateVectors();
             }
+        }
+
+        public void SetAspectRatio(float ratio)
+        {
+            aspectRatio = ratio;
+            cachedProjectionMatrix = CalculateProjectionMatrix();
+            cachedVisibilityLimit = CalculateVisiblityLimit();
+        }
+
+        public float GetVisibilityLimit()
+        {
+            if (cachedVisibilityLimit == 0)
+            {
+                cachedVisibilityLimit = CalculateVisiblityLimit();
+            }
+            return cachedVisibilityLimit;
         }
 
         public void Update(float deltaTime)
@@ -100,12 +121,9 @@ namespace OpenTK_3D_Renderer
 
         private Vector3 ClampSphereMovement(Vector3 movement)
         {
-            if (MathF.Abs(front.Y) >= .95f)
+            if (MathF.Abs(front.Y) >= .95f && Vector3.Dot(movement, front) < 0)
             {
-                if (Vector3.Dot(movement, front) < 0)
-                {
-                    movement *= (1, 0, 1);
-                }
+                movement *= (1, 0, 1);
             }
 
             return movement;
@@ -118,7 +136,11 @@ namespace OpenTK_3D_Renderer
 
         public Matrix4 GetProjectionMatrix()
         {
-            return Matrix4.CreatePerspectiveFieldOfView(fovRad, AspectRatio, 0.01f, 100f);
+            if (cachedProjectionMatrix.Equals(Matrix4.Identity))
+            {
+                cachedProjectionMatrix = CalculateProjectionMatrix();
+            }
+            return cachedProjectionMatrix;
         }
 
         private void UpdateVectors()
@@ -144,6 +166,19 @@ namespace OpenTK_3D_Renderer
             Position = (0, 0, -3);
             yawRad = MathHelper.PiOver2;
             pitch = 0;
+        }
+
+        private Matrix4 CalculateProjectionMatrix()
+        {
+            return Matrix4.CreatePerspectiveFieldOfView(fovRad, aspectRatio, 0.01f, 100f);
+        }
+
+        private float CalculateVisiblityLimit()
+        {
+            float yFov = fovRad / 2;
+            float xFov = yFov * aspectRatio;
+            float diagonalFov = MathF.Sqrt(xFov * xFov + yFov * yFov);
+            return MathF.Cos(diagonalFov);
         }
     }
 }

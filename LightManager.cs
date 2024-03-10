@@ -19,7 +19,7 @@ namespace OpenTK_3D_Renderer
                 lights.Insert(0, light);
             }
             else
-            { 
+            {
                 lights.Add(light);
             }
         }
@@ -34,6 +34,7 @@ namespace OpenTK_3D_Renderer
             lights.Clear();
         }
 
+        //TODO: reduce time complexity to lower than O(N)?
         public List<Light> GetRelevantLightsForObject(MeshedObject obj)
         {
             List<Light> result = new List<Light>();
@@ -44,7 +45,7 @@ namespace OpenTK_3D_Renderer
                 {
                     PointLight pointLight = (PointLight)light;
                     float combinedRadius = pointLight.Radius + obj.GetMeshRadius();
-                    if (ManhattanDistance(pointLight.InternalVector.Xyz, obj.Transform.Position) < combinedRadius)
+                    if (ApproximatedDistance(pointLight.InternalVector.Xyz, obj.Transform.Position) < combinedRadius)
                     {
                         result.Add(pointLight);
                     }
@@ -55,16 +56,19 @@ namespace OpenTK_3D_Renderer
                 }
                 if (result.Count >= Renderer.MaxSimultaneousLights)
                 {
-                    Console.WriteLine("Too many lights together, some are being culled");
+                    Console.WriteLine("Too many lights together, some might be culled");
                     return result;
                 }
             }
             return result;
         }
 
-        private float ManhattanDistance(Vector3 p1, Vector3 p2)
+        private readonly float manhattanWorstCaseScaleCorrection = MathF.Sqrt(2) / 2.0f;
+        private float ApproximatedDistance(Vector3 p1, Vector3 p2)
         {
-            return MathF.Abs(p1.X - p2.X) + MathF.Abs(p1.Y - p2.Y) + MathF.Abs(p1.Z - p2.Z);
+            float manhattanDist = MathF.Abs(p1.X - p2.X) + MathF.Abs(p1.Y - p2.Y) + MathF.Abs(p1.Z - p2.Z);
+            //Multiply by this factor to make it only return values equal or smaller to the actual dist
+            return manhattanDist * manhattanWorstCaseScaleCorrection;
         }
 
     }
