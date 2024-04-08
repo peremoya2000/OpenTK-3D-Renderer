@@ -22,7 +22,7 @@ namespace OpenTK_3D_Renderer
             input = new Input(KeyboardState, MouseState);
             input.OnClose += OnCloseInput;
             CursorState = CursorState.Grabbed;
-            camera = new Camera(new Vector3(0, 0, -3), input, width / height);
+            camera = new Camera(new Vector3(0, 0, 3), input, width / height);
             lightManager = new LightManager();
             renderedMeshes = new List<MeshedObject>();
         }
@@ -44,16 +44,32 @@ namespace OpenTK_3D_Renderer
             GL.Enable(EnableCap.DepthTest);
 
             lightManager.AddLight(new PointLight(new Vector3(0, -5, 0), Vector3.UnitZ, 30, 5));
-            lightManager.AddLight(new DirectionalLight(-Vector3.UnitZ, Vector3.UnitX));
+            lightManager.AddLight(new DirectionalLight(Vector3.UnitZ, Vector3.UnitX));
 
             Transform t;
-            for (int i = -5; i < 5; ++i)
+            MeshedObject mesh = null;
+            for (int i = -10; i <= 10; ++i)
             {
-                t = new Transform
+                for (int j = -10; j <= 10; ++j)
                 {
-                    Position = Vector3.UnitX * i * 5
-                };
-                renderedMeshes.Add(new MeshedObject(Project.Resources + "monkey.obj", t));
+                    for (int k = 0; k < 5; ++k)
+                    {
+                        t = new Transform
+                        {
+                            Position = new Vector3(i * 5f, j * 5f, -k * 5f)
+                        };
+                        if (mesh == null)
+                        {
+                            mesh = new MeshedObject(Project.Resources + "monkey.obj", t);
+                            renderedMeshes.Add(mesh);
+                        }
+                        else
+                        {
+                            renderedMeshes.Add(new MeshedObject(mesh, t));
+                        }
+                        
+                    }
+                }
             }
         }
 

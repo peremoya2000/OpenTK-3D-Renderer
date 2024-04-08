@@ -18,7 +18,7 @@ namespace OpenTK_3D_Renderer
         // Rotation around the Y axis (radians)
         private float pitchRad = 0;
         // Rotation around the X axis (radians)
-        private float yawRad = MathHelper.PiOver2;
+        private float yawRad = -MathHelper.PiOver2;
         // The field of view of the camera (radians)
         private float fovRad = MathHelper.PiOver2;
         private bool freeLook = true;
@@ -40,7 +40,7 @@ namespace OpenTK_3D_Renderer
         public Vector3 Position { get; private set; }
 
         private float aspectRatio;
-        private float cachedVisibilityLimit;
+        private float cachedVisibilityLimit = float.MinValue;
 
         public Vector3 Front => front;
         public Vector3 Up => up;
@@ -76,7 +76,7 @@ namespace OpenTK_3D_Renderer
 
         public float GetVisibilityLimit()
         {
-            if (cachedVisibilityLimit == 0)
+            if (cachedVisibilityLimit == float.MinValue)
             {
                 cachedVisibilityLimit = CalculateVisiblityLimit();
             }
@@ -163,8 +163,8 @@ namespace OpenTK_3D_Renderer
 
         private void ResetCamera()
         {
-            Position = (0, 0, -3);
-            yawRad = MathHelper.PiOver2;
+            Position = (0, 0, 3);
+            yawRad = -MathHelper.PiOver2;
             pitch = 0;
         }
 

@@ -40,5 +40,10 @@ namespace OpenTK_3D_Renderer
             return scaling*rotation*translation;
         }
 
+        public Transform GetCopy()
+        {
+            return new Transform(Position, Rotation, Scale);
+        }
+
     }
 }

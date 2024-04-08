@@ -63,7 +63,7 @@ namespace OpenTK_3D_Renderer
             return result;
         }
 
-        private readonly float manhattanWorstCaseScaleCorrection = MathF.Sqrt(2) / 2.0f;
+        private readonly float manhattanWorstCaseScaleCorrection = MathF.Sqrt(3) / 3.0f;
         private float ApproximatedDistance(Vector3 p1, Vector3 p2)
         {
             float manhattanDist = MathF.Abs(p1.X - p2.X) + MathF.Abs(p1.Y - p2.Y) + MathF.Abs(p1.Z - p2.Z);
