@@ -169,15 +169,9 @@ namespace OpenTK_3D_Renderer
             UpdateLightsData(lights);
 
             shader.Use();
+            UpdateModelData();
+            UpdateCameraData(camera);
 
-            Matrix4 model = Transform.GetModelMatrix();
-            shader.SetMatrix4("model", model);
-            Matrix3 normalRot = new Matrix3(Matrix4.Transpose(model.Inverted()));
-            shader.SetMatrix3("normalRot", normalRot);
-
-            shader.SetMatrix4("view", camera.GetViewMatrix());
-            shader.SetMatrix4("projection", camera.GetProjectionMatrix());
-            shader.SetVector3("viewPos", camera.Position);
             GL.BindVertexArray(vertexArrayObject);
             GL.DrawElements(PrimitiveType.Triangles, indices.Length, DrawElementsType.UnsignedInt, 0);
         }
@@ -205,6 +199,19 @@ namespace OpenTK_3D_Renderer
                 }
             }
             shader.SetFloat("lightCount", lights.Count);
+        }
+        private void UpdateModelData()
+        {
+            Matrix4 model = Transform.GetModelMatrix();
+            shader.SetMatrix4("model", model);
+            Matrix3 normalRot = new Matrix3(Matrix4.Transpose(model.Inverted()));
+            shader.SetMatrix3("normalRot", normalRot);
+        }
+        private void UpdateCameraData(Camera camera)
+        {
+            shader.SetMatrix4("view", camera.GetViewMatrix());
+            shader.SetMatrix4("projection", camera.GetProjectionMatrix());
+            shader.SetVector3("viewPos", camera.Position);
         }
 
         private void UpdateMeshRadius()

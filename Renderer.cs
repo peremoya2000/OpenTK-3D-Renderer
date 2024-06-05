@@ -67,7 +67,7 @@ namespace OpenTK_3D_Renderer
                         {
                             renderedMeshes.Add(new MeshedObject(mesh, t));
                         }
-                        
+
                     }
                 }
             }

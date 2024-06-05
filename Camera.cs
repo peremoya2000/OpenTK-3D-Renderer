@@ -85,6 +85,13 @@ namespace OpenTK_3D_Renderer
 
         public void Update(float deltaTime)
         {
+            Vector3 movement = ProcessCameraMovementInput();
+
+            ApplyMovementToPosition(movement, deltaTime);
+        }
+
+        private Vector3 ProcessCameraMovementInput()
+        {
             Vector3 movement = input.CameraMovement;
 
             if (movement.Equals(Vector3.Zero))
@@ -104,6 +111,11 @@ namespace OpenTK_3D_Renderer
                 movement = ClampSphereMovement(movement);
             }
 
+            return movement;
+        }
+
+        private void ApplyMovementToPosition(Vector3 movement, float deltaTime)
+        {
             Position += front * movement.Z * deltaTime;
             Position += up * movement.Y * deltaTime;
             Position += right * movement.X * deltaTime;

@@ -6,10 +6,11 @@ namespace OpenTK_3D_Renderer
 {
     class LightManager
     {
-        private readonly List<Light> lights = new List<Light>();
+        private readonly List<Light> lights;
 
         public LightManager()
         {
+            lights = new List<Light>();
         }
 
         public void AddLight(Light light)
