@@ -24,6 +24,7 @@ namespace OpenTK_3D_Renderer
         private bool freeLook = true;
 
         private Matrix4 cachedProjectionMatrix = Matrix4.Identity;
+        private Matrix4 cachedViewMatrix = Matrix4.Identity;
 
         private readonly Input input;
 
@@ -35,6 +36,7 @@ namespace OpenTK_3D_Renderer
             input.OnResetCamera += ResetCamera;
             fovRad = MathHelper.DegreesToRadians(verticalFov);
             cachedProjectionMatrix = CalculateProjectionMatrix();
+            UpdateCachedViewMatrix();
         }
 
         public Vector3 Position { get; private set; }
@@ -88,6 +90,8 @@ namespace OpenTK_3D_Renderer
             Vector3 movement = ProcessCameraMovementInput();
 
             ApplyMovementToPosition(movement, deltaTime);
+
+            UpdateCachedViewMatrix();
         }
 
         private Vector3 ProcessCameraMovementInput()
@@ -143,7 +147,7 @@ namespace OpenTK_3D_Renderer
 
         public Matrix4 GetViewMatrix()
         {
-            return Matrix4.LookAt(Position, Position + front, up);
+            return cachedViewMatrix;
         }
 
         public Matrix4 GetProjectionMatrix()
@@ -178,6 +182,12 @@ namespace OpenTK_3D_Renderer
             Position = (0, 0, 3);
             yawRad = -MathHelper.PiOver2;
             pitch = 0;
+            UpdateCachedViewMatrix();
+        }
+
+        private void UpdateCachedViewMatrix()
+        {
+            cachedViewMatrix = Matrix4.LookAt(Position, Position + front, up);
         }
 
         private Matrix4 CalculateProjectionMatrix()

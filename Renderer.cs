@@ -9,7 +9,7 @@ namespace OpenTK_3D_Renderer
 {
     public class Renderer : GameWindow
     {
-        public readonly static short MaxSimultaneousLights = 16;
+        public const short MaxSimultaneousLights = 16;
         private readonly Input input;
         private readonly Camera camera;
         private readonly LightManager lightManager;
@@ -102,9 +102,10 @@ namespace OpenTK_3D_Renderer
                 Close();
             }
 
-            //TODO: add normal map support
-            //TODO: shadowcasting?
-            //TODO: transparent materials?
+            //TODO: transparent materials
+            //TODO: load scene from file (easier to make my own than use USD, might even make it compressed with something like gzip stream)
+            //TODO: shadowcasting
+            //TODO: add normal map support?
 
             for (short i = 0; i < renderedMeshes.Count; ++i)
             {
@@ -133,6 +134,7 @@ namespace OpenTK_3D_Renderer
             {
                 mesh.Transform.AddRotation(Quaternion.FromAxisAngle(Vector3.UnitY, deltaTime));
             }
+
             input.Update();
             camera.Update(deltaTime);
         }

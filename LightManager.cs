@@ -57,7 +57,7 @@ namespace OpenTK_3D_Renderer
                 }
                 if (result.Count >= Renderer.MaxSimultaneousLights)
                 {
-                    Console.WriteLine("Too many lights together, some might be culled");
+                    Console.WriteLine("Too many relevant lights, some might be skipped");
                     return result;
                 }
             }
