@@ -13,10 +13,12 @@ namespace OpenTK_3D_Renderer
         private readonly Input input;
         private readonly Camera camera;
         private readonly LightManager lightManager;
-        private readonly List<MeshedObject> renderedMeshes;
+        private List<MeshedObject> renderedMeshes;
+        private bool loadingScene = true;
 
         public Renderer(int width, int height, string title) : base(GameWindowSettings.Default, new NativeWindowSettings() { Size = (width, height), Title = title })
         {
+            loadingScene = true;
             this.RenderFrequency = 120;
             this.UpdateFrequency = 120;
             input = new Input(KeyboardState, MouseState);
@@ -38,39 +40,22 @@ namespace OpenTK_3D_Renderer
 
         protected override void OnLoad()
         {
+            loadingScene = true;
+
             base.OnLoad();
 
             GL.ClearColor(0.2f, 0.3f, 0.3f, 1.0f);
             GL.Enable(EnableCap.DepthTest);
 
-            lightManager.AddLight(new PointLight(new Vector3(0, -5, 0), Vector3.UnitZ, 30, 5));
-            lightManager.AddLight(new DirectionalLight(Vector3.UnitZ, Vector3.UnitX));
+            ISceneLoader sceneLoader = new ColladaSceneLoader();
+            sceneLoader.LoadScene(Project.Resources + "sample-scene.dae", out renderedMeshes, out List<Light> lights);
 
-            Transform t;
-            MeshedObject mesh = null;
-            for (int i = -10; i <= 10; ++i)
+            for (int i = 0; i < lights.Count; ++i)
             {
-                for (int j = -10; j <= 10; ++j)
-                {
-                    for (int k = 0; k < 5; ++k)
-                    {
-                        t = new Transform
-                        {
-                            Position = new Vector3(i * 5f, j * 5f, -k * 5f)
-                        };
-                        if (mesh == null)
-                        {
-                            mesh = new MeshedObject(Project.Resources + "monkey.obj", t);
-                            renderedMeshes.Add(mesh);
-                        }
-                        else
-                        {
-                            renderedMeshes.Add(new MeshedObject(mesh, t));
-                        }
-
-                    }
-                }
+                lightManager.AddLight(lights[i]);
             }
+
+            loadingScene = false;
         }
 
         protected override void OnUnload()
@@ -95,6 +80,11 @@ namespace OpenTK_3D_Renderer
         {
             base.OnRenderFrame(e);
 
+            if (loadingScene)
+            {
+                return;
+            }
+
             GL.Clear(ClearBufferMask.ColorBufferBit | ClearBufferMask.DepthBufferBit);
 
             if (KeyboardState.IsKeyDown(Keys.Escape))
@@ -103,7 +93,6 @@ namespace OpenTK_3D_Renderer
             }
 
             //TODO: transparent materials
-            //TODO: load scene from file (easier to make my own than use USD, might even make it compressed with something like gzip stream)
             //TODO: shadowcasting
             //TODO: add normal map support?
 
@@ -130,10 +119,6 @@ namespace OpenTK_3D_Renderer
             }
 
             float deltaTime = (float)e.Time;
-            foreach (MeshedObject mesh in renderedMeshes)
-            {
-                mesh.Transform.AddRotation(Quaternion.FromAxisAngle(Vector3.UnitY, deltaTime));
-            }
 
             input.Update();
             camera.Update(deltaTime);

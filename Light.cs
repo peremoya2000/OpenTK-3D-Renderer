@@ -1,11 +1,9 @@
 ﻿using OpenTK.Mathematics;
-using System;
-using System.Collections.Generic;
 
 namespace OpenTK_3D_Renderer
 {
     public enum LightType
-    { 
+    {
         DirectionalLight,
         PointLight
     }

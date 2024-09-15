@@ -2,7 +2,7 @@
 
 namespace OpenTK_3D_Renderer
 {
-    class Transform
+    public class Transform
     {
         public Vector3 Position;
         public Quaternion Rotation;

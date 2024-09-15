@@ -37,10 +37,10 @@ vec3 shadeFragment(vec4 matData, vec3 lightDir, vec3 lightColor)
 
     vec3 ambient = lightColor * material.ambientTint * surfaceColor;
 
-    float diffIntensity = max(dot(normal, lightDir), 0.0);
+    float diffIntensity = max(dot(-normal, lightDir), 0.0);
     vec3 diffuse = lightColor * (diffIntensity * surfaceColor * material.diffuseTint);
 
-    vec3 viewDir = normalize(viewPos - fragWorldPos);
+    vec3 viewDir = normalize(fragWorldPos-viewPos);
     vec3 reflectDir = reflect(-lightDir, normal);
     float specIntensity = pow(max(dot(viewDir, reflectDir), 0.0), material.shininess);
     vec3 specular = lightColor * (specIntensity * specularMask);
@@ -51,14 +51,7 @@ vec3 shadeFragment(vec4 matData, vec3 lightDir, vec3 lightColor)
 vec3 directionalLight(Light light, vec4 texData)
 {
     vec3 shadingColor = shadeFragment(texData, light.vector.xyz, light.color);
-    if(light.intensity>0)
-    {
-        return shadingColor*light.intensity;
-    }
-    else
-    {
-        return shadingColor;
-    }
+    return shadingColor*max(0,light.intensity);
 }
 
 float pow2(float x)

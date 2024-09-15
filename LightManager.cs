@@ -35,7 +35,7 @@ namespace OpenTK_3D_Renderer
             lights.Clear();
         }
 
-        //TODO: reduce time complexity to lower than O(N)?
+        //TODO: reduce time complexity to lower than O(N) (e.g. spatial hashing)?
         public List<Light> GetRelevantLightsForObject(MeshedObject obj)
         {
             List<Light> result = new List<Light>();
@@ -46,7 +46,7 @@ namespace OpenTK_3D_Renderer
                 {
                     PointLight pointLight = (PointLight)light;
                     float combinedRadius = pointLight.Radius + obj.GetMeshRadius();
-                    if (ApproximatedDistance(pointLight.InternalVector.Xyz, obj.Transform.Position) < combinedRadius)
+                    if (ApproximatedDistance(pointLight.InternalVector.Xyz, obj.MeshTransform.Position) < combinedRadius)
                     {
                         result.Add(pointLight);
                     }

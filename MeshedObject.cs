@@ -1,110 +1,55 @@
 ﻿using OpenTK.Graphics.OpenGL4;
 using OpenTK.Mathematics;
-using OpenTK.Windowing.Common.Input;
 using System;
 using System.Collections.Generic;
 
 namespace OpenTK_3D_Renderer
 {
-    class MeshedObject
+    public class MeshedObject
     {
-        public Transform Transform;
+        public Transform MeshTransform;
         public float[] Vertices => vertices;
         public uint[] Indices => indices;
         private float meshMaxRadius = 0;
-        private float[] vertices;
-        private uint[] indices;
-        private readonly int vertexBufferObject, elementBufferObject, vertexArrayObject;
+        private readonly float[] vertices;
+        private readonly uint[] indices;
+        private int vertexBufferObject, elementBufferObject, vertexArrayObject;
         private readonly float cullingMargin = 3.0f / MathF.Sqrt(3);
         private Shader shader;
         private Material material;
 
-        public MeshedObject(string meshPath) : this(meshPath, new Transform(), new Material())
+        public MeshedObject(Transform transform, float[] uncompressedVertexBuffer, Material mat)
         {
-        }
-        public MeshedObject(string meshPath, Transform transform) : this(meshPath, transform, new Material())
-        {
-        }
-        public MeshedObject(string meshPath, Material material) : this(meshPath, new Transform(), material)
-        {
-        }
-        public MeshedObject(string meshPath, Transform transform, Material mat)
-        {
-            Transform = transform;
+            MeshTransform = transform;
             material = mat;
-
-            vertices = ModelImporter.Import(meshPath);
+            vertices = uncompressedVertexBuffer;
             ModelFormatConverter.SimplifyToIndexFormat(8, ref vertices, out indices);
             UpdateMeshRadius();
 
-            vertexBufferObject = GL.GenBuffer();
-            GL.BindBuffer(BufferTarget.ArrayBuffer, vertexBufferObject);
-            GL.BufferData(BufferTarget.ArrayBuffer, vertices.Length * sizeof(float), vertices, BufferUsageHint.StaticDraw);
-
-            vertexArrayObject = GL.GenVertexArray();
-            GL.BindVertexArray(vertexArrayObject);
-            GL.VertexAttribPointer(0, 3, VertexAttribPointerType.Float, false, 8 * sizeof(float), 0);
-            GL.EnableVertexAttribArray(0);
-
-            elementBufferObject = GL.GenBuffer();
-            GL.BindBuffer(BufferTarget.ElementArrayBuffer, elementBufferObject);
-            GL.BufferData(BufferTarget.ElementArrayBuffer, indices.Length * sizeof(uint), indices, BufferUsageHint.StaticDraw);
-
-            shader = new Shader(Project.Resources + "shader.vert", Project.Resources + "shader.frag");
-            shader.Use();
-
-            shader.SetVector3("material.ambientTint", material.AmbientTint);
-            shader.SetVector3("material.diffuseTint", material.DiffuseTint);
-            shader.SetFloat("material.shininess", material.Shininess);
-            var normalLocation = shader.GetAttribLocation("aNormal");
-            GL.EnableVertexAttribArray(normalLocation);
-            GL.VertexAttribPointer(normalLocation, 3, VertexAttribPointerType.Float, false, 8 * sizeof(float), 3 * sizeof(float));
-
-            int texCoordLocation = shader.GetAttribLocation("aTexCoord");
-            GL.EnableVertexAttribArray(texCoordLocation);
-            GL.VertexAttribPointer(texCoordLocation, 2, VertexAttribPointerType.Float, false, 8 * sizeof(float), 6 * sizeof(float));
+            InitializeGlBuffers();
+            InitializeShader();
         }
 
-        public MeshedObject(MeshedObject meshToCopy, Transform transform = null)
+        public MeshedObject(MeshedObject meshToCopy, Transform transformOverride = null, Material materialOverride= null)
         {
-            if (transform == null)
+            if (transformOverride == null)
             {
-                transform = meshToCopy.Transform.GetCopy();
+                transformOverride = meshToCopy.MeshTransform.GetCopy();
             }
-            Transform = transform;
+            MeshTransform = transformOverride;
 
-            material = meshToCopy.GetMaterial().GetCopy();
+            if (materialOverride == null)
+            { 
+                materialOverride = meshToCopy.GetMaterial().GetCopy();           
+            }
+            material = materialOverride;
 
             vertices = meshToCopy.Vertices;
             indices = meshToCopy.Indices;
             UpdateMeshRadius();
 
-            vertexBufferObject = GL.GenBuffer();
-            GL.BindBuffer(BufferTarget.ArrayBuffer, vertexBufferObject);
-            GL.BufferData(BufferTarget.ArrayBuffer, vertices.Length * sizeof(float), vertices, BufferUsageHint.StaticDraw);
-
-            vertexArrayObject = GL.GenVertexArray();
-            GL.BindVertexArray(vertexArrayObject);
-            GL.VertexAttribPointer(0, 3, VertexAttribPointerType.Float, false, 8 * sizeof(float), 0);
-            GL.EnableVertexAttribArray(0);
-
-            elementBufferObject = GL.GenBuffer();
-            GL.BindBuffer(BufferTarget.ElementArrayBuffer, elementBufferObject);
-            GL.BufferData(BufferTarget.ElementArrayBuffer, indices.Length * sizeof(uint), indices, BufferUsageHint.StaticDraw);
-
-            shader = new Shader(Project.Resources + "shader.vert", Project.Resources + "shader.frag");
-            shader.Use();
-
-            shader.SetVector3("material.ambientTint", material.AmbientTint);
-            shader.SetVector3("material.diffuseTint", material.DiffuseTint);
-            shader.SetFloat("material.shininess", material.Shininess);
-            var normalLocation = shader.GetAttribLocation("aNormal");
-            GL.EnableVertexAttribArray(normalLocation);
-            GL.VertexAttribPointer(normalLocation, 3, VertexAttribPointerType.Float, false, 8 * sizeof(float), 3 * sizeof(float));
-
-            int texCoordLocation = shader.GetAttribLocation("aTexCoord");
-            GL.EnableVertexAttribArray(texCoordLocation);
-            GL.VertexAttribPointer(texCoordLocation, 2, VertexAttribPointerType.Float, false, 8 * sizeof(float), 6 * sizeof(float));
+            InitializeGlBuffers();
+            InitializeShader();
         }
 
         public void SetMaterial(Material mat)
@@ -119,7 +64,7 @@ namespace OpenTK_3D_Renderer
 
         public float GetMeshRadius()
         {
-            return meshMaxRadius * Transform.Scale;
+            return meshMaxRadius * MeshTransform.Scale;
         }
 
         public void Dispose()
@@ -131,7 +76,7 @@ namespace OpenTK_3D_Renderer
         public bool IsInsideCameraFrustum(Camera camera)
         {
             //First pass of culling based on distance & dot product to handle meshes you are inside of or behind you
-            Vector3 cameraToMesh = Transform.Position - camera.Position;
+            Vector3 cameraToMesh = MeshTransform.Position - camera.Position;
             float meshRadius = GetMeshRadius();
             if (cameraToMesh.LengthSquared <= meshRadius * meshRadius)
             {
@@ -147,7 +92,7 @@ namespace OpenTK_3D_Renderer
 
             //Second pass based on space transformations
             Matrix4 viewProjection = camera.GetViewMatrix() * camera.GetProjectionMatrix();
-            Vector4 clipSpacePos = new Vector4(Transform.Position, 1) * viewProjection;
+            Vector4 clipSpacePos = new Vector4(MeshTransform.Position, 1) * viewProjection;
             clipSpacePos /= clipSpacePos.W;
             if (clipSpacePos.X > -1 && clipSpacePos.X < 1 && clipSpacePos.Y > -1 && clipSpacePos.Y < 1)
             {
@@ -161,7 +106,7 @@ namespace OpenTK_3D_Renderer
             worldSpaceFrustumEdge *= viewProjection.Inverted();
             worldSpaceFrustumEdge.Xyz /= worldSpaceFrustumEdge.W;
 
-            return (Transform.Position - worldSpaceFrustumEdge.Xyz).LengthFast <= meshRadius * cullingMargin;
+            return (MeshTransform.Position - worldSpaceFrustumEdge.Xyz).LengthFast <= meshRadius * cullingMargin;
         }
 
         public void Draw(Camera camera, List<Light> lights)
@@ -174,6 +119,39 @@ namespace OpenTK_3D_Renderer
 
             GL.BindVertexArray(vertexArrayObject);
             GL.DrawElements(PrimitiveType.Triangles, indices.Length, DrawElementsType.UnsignedInt, 0);
+        }
+
+        private void InitializeGlBuffers()
+        {
+            vertexBufferObject = GL.GenBuffer();
+            GL.BindBuffer(BufferTarget.ArrayBuffer, vertexBufferObject);
+            GL.BufferData(BufferTarget.ArrayBuffer, vertices.Length * sizeof(float), vertices, BufferUsageHint.StaticDraw);
+
+            vertexArrayObject = GL.GenVertexArray();
+            GL.BindVertexArray(vertexArrayObject);
+            GL.VertexAttribPointer(0, 3, VertexAttribPointerType.Float, false, 8 * sizeof(float), 0);
+            GL.EnableVertexAttribArray(0);
+
+            elementBufferObject = GL.GenBuffer();
+            GL.BindBuffer(BufferTarget.ElementArrayBuffer, elementBufferObject);
+            GL.BufferData(BufferTarget.ElementArrayBuffer, indices.Length * sizeof(uint), indices, BufferUsageHint.StaticDraw);
+        }
+
+        private void InitializeShader()
+        {
+            shader = new Shader(Project.Resources + "shader.vert", Project.Resources + "shader.frag");
+            shader.Use();
+
+            shader.SetVector3("material.ambientTint", material.AmbientTint);
+            shader.SetVector3("material.diffuseTint", material.DiffuseTint.Xyz);
+            shader.SetFloat("material.shininess", material.Shininess);
+            var normalLocation = shader.GetAttribLocation("aNormal");
+            GL.EnableVertexAttribArray(normalLocation);
+            GL.VertexAttribPointer(normalLocation, 3, VertexAttribPointerType.Float, false, 8 * sizeof(float), 3 * sizeof(float));
+
+            int texCoordLocation = shader.GetAttribLocation("aTexCoord");
+            GL.EnableVertexAttribArray(texCoordLocation);
+            GL.VertexAttribPointer(texCoordLocation, 2, VertexAttribPointerType.Float, false, 8 * sizeof(float), 6 * sizeof(float));
         }
 
         private void UpdateLightsData(List<Light> lights)
@@ -202,7 +180,7 @@ namespace OpenTK_3D_Renderer
         }
         private void UpdateModelData()
         {
-            Matrix4 model = Transform.GetModelMatrix();
+            Matrix4 model = MeshTransform.GetModelMatrix();
             shader.SetMatrix4("model", model);
             Matrix3 normalRot = new Matrix3(Matrix4.Transpose(model.Inverted()));
             shader.SetMatrix3("normalRot", normalRot);
@@ -216,7 +194,6 @@ namespace OpenTK_3D_Renderer
 
         private void UpdateMeshRadius()
         {
-            Vector3 maxVert = Vector3.Zero;
             Vector3 tVert;
             float maxLengthSquared = 0;
             for (int i = 0; i < vertices.Length; i += 3)
@@ -225,10 +202,9 @@ namespace OpenTK_3D_Renderer
                 if (tVert.LengthSquared > maxLengthSquared)
                 {
                     maxLengthSquared = tVert.LengthSquared;
-                    maxVert = tVert;
                 }
             }
-            meshMaxRadius = maxVert.Length;
+            meshMaxRadius = MathF.Sqrt(maxLengthSquared);
         }
     }
 }
