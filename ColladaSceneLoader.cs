@@ -24,7 +24,7 @@ namespace OpenTK_3D_Renderer
             lights = new();
 
             loadedDocument = XElement.Load(filePath);
-            var lightsData = RecursiveGetChildElementWithName(loadedDocument, "library_lights");
+            var lightsData = RecursiveGetChildElementWithTag(loadedDocument, "library_lights");
             if (lightsData != null)
             {
                 lights.AddRange(CreateLights(lightsData));
@@ -47,10 +47,10 @@ namespace OpenTK_3D_Renderer
                     continue;
                 }
                 string lightName = (string)lightNameData;
-                var lightData = RecursiveGetChildElementWithName(lightElement, "point");
+                var lightData = RecursiveGetChildElementWithTag(lightElement, "point");
                 if (lightData != null)
                 {
-                    XElement colorData = RecursiveGetChildElementWithName(lightData, "color");
+                    XElement colorData = RecursiveGetChildElementWithTag(lightData, "color");
                     Vector3 rawColorVector = GetVector3(colorData);
                     float intensity = MathF.Max(rawColorVector.X, MathF.Max(rawColorVector.Y, rawColorVector.Z));
                     if (intensity > 1)
@@ -64,13 +64,13 @@ namespace OpenTK_3D_Renderer
                 else
                 {
                     //Try process directional light
-                    lightData = RecursiveGetChildElementWithName(lightElement, "directional");
+                    lightData = RecursiveGetChildElementWithTag(lightElement, "directional");
                     if (lightData == null)
                     {
                         continue;
                     }
 
-                    XElement colorData = RecursiveGetChildElementWithName(lightData, "color");
+                    XElement colorData = RecursiveGetChildElementWithTag(lightData, "color");
                     Vector3 rawColorVector = GetVector3(colorData);
                     float intensity = MathF.Max(rawColorVector.X, MathF.Max(rawColorVector.Y, rawColorVector.Z));
                     if (intensity > 1)
@@ -92,8 +92,8 @@ namespace OpenTK_3D_Renderer
             List<MeshedObject> meshedObjects = new();
 
             LoadSceneMaterials();
-            XElement geometryLibrary = RecursiveGetChildElementWithName(loadedDocument, "library_geometries", 2);
-            List<XElement> meshDataElements = RecursiveGetChildrenWithTagName(geometryLibrary, "geometry", 1);
+            XElement geometryLibrary = RecursiveGetChildElementWithTag(loadedDocument, "library_geometries", 2);
+            List<XElement> meshDataElements = RecursiveGetChildrenWithTag(geometryLibrary, "geometry", 1);
             for (int i = 0; i < meshDataElements.Count; ++i)
             {
                 string meshName = (string)meshDataElements[i].Attributes().Where(x => x.Name.LocalName.Contains("name", StringComparison.OrdinalIgnoreCase)).FirstOrDefault();
@@ -104,8 +104,8 @@ namespace OpenTK_3D_Renderer
 
                 Transform meshedObjectTransform = GetSceneObjectTransform(meshName);
 
-                XElement trianglesData = RecursiveGetChildElementWithName(meshDataElements[i], "triangles", 3);
-                List<XElement> vertexDataSources = RecursiveGetChildrenWithTagName(meshDataElements[i], "source", 3);
+                XElement trianglesData = RecursiveGetChildElementWithTag(meshDataElements[i], "triangles", 3);
+                List<XElement> vertexDataSources = RecursiveGetChildrenWithTag(meshDataElements[i], "source", 3);
                 float[] uncompressedVertexBuffer = ReadMeshVertexBuffer(trianglesData, vertexDataSources);
 
                 string materialName = (string)trianglesData.Attributes().FirstOrDefault(x => x.Name.LocalName.Contains("material", StringComparison.OrdinalIgnoreCase));
@@ -141,9 +141,9 @@ namespace OpenTK_3D_Renderer
             string vertexTexCoordsData = (string)vertexDataSources.Find(x => ((string)x.FirstAttribute).Contains("mesh-map-0", StringComparison.OrdinalIgnoreCase));
             List<float> texCoords = ParseToFloatArray(vertexTexCoordsData.Split(" ")).ToList();
 
-            int[] indexList = ParseToIntArray(((string)RecursiveGetChildElementWithName(trianglesData, "p", 1, false)).Split(" "));
+            int[] indexList = ParseToIntArray(((string)RecursiveGetChildElementWithTag(trianglesData, "p", 1, false)).Split(" "));
 
-            List<float> uncompressedVertexBuffer = new();
+            List<float> uncompressedVertexBuffer = new(indexList.Length * 9);
             for (int j = 0; j < indexList.Length; j += 9)
             {
                 // Extract vertex data for a single triangle
@@ -165,19 +165,20 @@ namespace OpenTK_3D_Renderer
             return uncompressedVertexBuffer.ToArray();
         }
 
-        private XElement RecursiveGetChildElementWithName(XElement currentElement, string name, int maxDepth = 10, bool acceptPartialMatches = true)
+        private XElement RecursiveGetChildElementWithTag(XElement currentElement, string tagName, int maxDepth = 10, bool acceptPartialMatches = true)
         {
             if (currentElement != null && currentElement.HasElements && --maxDepth >= 0)
             {
-                foreach (var child in currentElement.Descendants())
+                XElement[] descendants = currentElement.Descendants().ToArray();
+                foreach (var child in descendants)
                 {
-                    if (!string.IsNullOrEmpty(child.Name.LocalName) && ElementMatchesString(child, name, acceptPartialMatches))
+                    if (!string.IsNullOrEmpty(child.Name.LocalName) && ElementMatchesString(child, tagName, acceptPartialMatches))
                     {
                         return child;
                     }
                     else
                     {
-                        XElement result = RecursiveGetChildElementWithName(child, name, maxDepth);
+                        XElement result = RecursiveGetChildElementWithTag(child, tagName, maxDepth);
                         if (result != null)
                         {
                             return result;
@@ -188,20 +189,22 @@ namespace OpenTK_3D_Renderer
             return null;
         }
 
-        private List<XElement> RecursiveGetChildrenWithTagName(XElement currentElement, string name, int maxDepth = 8)
+        private List<XElement> RecursiveGetChildrenWithTag(XElement currentElement, string tagName, int maxDepth = 8)
         {
             List<XElement> results = new();
             if (currentElement != null && currentElement.HasElements && --maxDepth >= 0)
             {
-                foreach (var child in currentElement.Descendants())
+                XElement[] descendants = currentElement.Descendants().ToArray();
+                results.Capacity = descendants.Length / 2;
+                foreach (var child in descendants)
                 {
-                    if (!string.IsNullOrEmpty(child.Name.LocalName) && child.Name.LocalName.Contains(name, StringComparison.OrdinalIgnoreCase))
+                    if (!string.IsNullOrEmpty(child.Name.LocalName) && child.Name.LocalName.Contains(tagName, StringComparison.OrdinalIgnoreCase))
                     {
                         results.Add(child);
                     }
                     else
                     {
-                        List<XElement> nestedResults = RecursiveGetChildrenWithTagName(child, name, maxDepth);
+                        List<XElement> nestedResults = RecursiveGetChildrenWithTag(child, tagName, maxDepth);
                         if (nestedResults != null && nestedResults.Count > 0)
                         {
                             results.AddRange(nestedResults);
@@ -275,7 +278,7 @@ namespace OpenTK_3D_Renderer
                 return null;
             }
 
-            XElement positionData = RecursiveGetChildElementWithName(sceneObjectData, "translate");
+            XElement positionData = RecursiveGetChildElementWithTag(sceneObjectData, "translate");
 
             if (positionData == null)
             {
@@ -289,11 +292,11 @@ namespace OpenTK_3D_Renderer
                 return new Transform(position);
             }
 
-            List<XElement> rotationDataElements = RecursiveGetChildrenWithTagName(sceneObjectData, "rotate", 1);
+            List<XElement> rotationDataElements = RecursiveGetChildrenWithTag(sceneObjectData, "rotate", 1);
             Vector3 eulerAngles = ExtractRotationAngles(rotationDataElements);
             Quaternion rotation = new(eulerAngles.X, eulerAngles.Y, eulerAngles.Z);
 
-            XElement scaleData = RecursiveGetChildElementWithName(sceneObjectData, "scale");
+            XElement scaleData = RecursiveGetChildElementWithTag(sceneObjectData, "scale");
             Vector3 scaleVector = GetVector3(scaleData);
             float uniformScale = (MathF.Abs(scaleVector.X) + MathF.Abs(scaleVector.Y) + MathF.Abs(scaleVector.Z)) / 3;
 
@@ -302,7 +305,7 @@ namespace OpenTK_3D_Renderer
 
         private Transform GetTransformFromCombinedMatrix(XElement element, bool positionOnly = false)
         {
-            XElement matrixData = RecursiveGetChildElementWithName(element, "matrix", 2);
+            XElement matrixData = RecursiveGetChildElementWithTag(element, "matrix", 2);
             if (matrixData == null)
             {
                 return null;
@@ -330,10 +333,10 @@ namespace OpenTK_3D_Renderer
 
         private XElement GetSceneObjectTransformData(string objectName)
         {
-            XElement sceneData = RecursiveGetChildElementWithName(loadedDocument, "visual_scene", 4);
+            XElement sceneData = RecursiveGetChildElementWithTag(loadedDocument, "visual_scene", 4);
             if (sceneData != null)
             {
-                List<XElement> nodes = RecursiveGetChildrenWithTagName(sceneData, "node");
+                List<XElement> nodes = RecursiveGetChildrenWithTag(sceneData, "node", 2);
                 for (int i = 0; i < nodes.Count; ++i)
                 {
                     XAttribute nameAtribute = nodes[i].Attributes().Where(x => x.Name.LocalName.Contains("name", StringComparison.OrdinalIgnoreCase)).FirstOrDefault();
@@ -368,11 +371,11 @@ namespace OpenTK_3D_Renderer
 
         private void LoadSceneMaterials()
         {
-            XElement meterialLibrary = RecursiveGetChildElementWithName(loadedDocument, "library_materials", 2);
-            List<XElement> materials = RecursiveGetChildrenWithTagName(meterialLibrary, "material");
+            XElement meterialLibrary = RecursiveGetChildElementWithTag(loadedDocument, "library_materials", 2);
+            List<XElement> materials = RecursiveGetChildrenWithTag(meterialLibrary, "material");
 
-            XElement effectsLibrary = RecursiveGetChildElementWithName(loadedDocument, "library_effects", 2);
-            List<XElement> effects = RecursiveGetChildrenWithTagName(effectsLibrary, "effect");
+            XElement effectsLibrary = RecursiveGetChildElementWithTag(loadedDocument, "library_effects", 2);
+            List<XElement> effects = RecursiveGetChildrenWithTag(effectsLibrary, "effect");
             materialDataCache = new Dictionary<string, MaterialData>();
             for (int i = 0; i < materials.Count; ++i)
             {
@@ -387,7 +390,7 @@ namespace OpenTK_3D_Renderer
 
                 XElement effectData = effects.Find(x => ((string)x.FirstAttribute).Contains(effectId, StringComparison.OrdinalIgnoreCase));
 
-                XElement diffuseTintData = RecursiveGetChildElementWithName(RecursiveGetChildElementWithName(effectData, "diffuse"), "color", 2);
+                XElement diffuseTintData = RecursiveGetChildElementWithTag(RecursiveGetChildElementWithTag(effectData, "diffuse"), "color", 2);
 
                 MaterialData matData = new();
                 matData.DiffuseTint = GetVector4(diffuseTintData);

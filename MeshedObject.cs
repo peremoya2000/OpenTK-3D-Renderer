@@ -30,7 +30,7 @@ namespace OpenTK_3D_Renderer
             InitializeShader();
         }
 
-        public MeshedObject(MeshedObject meshToCopy, Transform transformOverride = null, Material materialOverride= null)
+        public MeshedObject(MeshedObject meshToCopy, Transform transformOverride = null, Material materialOverride = null)
         {
             if (transformOverride == null)
             {
@@ -39,8 +39,8 @@ namespace OpenTK_3D_Renderer
             MeshTransform = transformOverride;
 
             if (materialOverride == null)
-            { 
-                materialOverride = meshToCopy.GetMaterial().GetCopy();           
+            {
+                materialOverride = meshToCopy.GetMaterial().GetCopy();
             }
             material = materialOverride;
 

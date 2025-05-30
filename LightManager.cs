@@ -46,7 +46,7 @@ namespace OpenTK_3D_Renderer
                 {
                     PointLight pointLight = (PointLight)light;
                     float combinedRadius = pointLight.Radius + obj.GetMeshRadius();
-                    if (ApproximatedDistance(pointLight.InternalVector.Xyz, obj.MeshTransform.Position) < combinedRadius)
+                    if ((pointLight.InternalVector.Xyz - obj.MeshTransform.Position).LengthSquared < combinedRadius * combinedRadius)
                     {
                         result.Add(pointLight);
                     }
@@ -63,14 +63,5 @@ namespace OpenTK_3D_Renderer
             }
             return result;
         }
-
-        private readonly float manhattanWorstCaseScaleCorrection = MathF.Sqrt(3) / 3.0f;
-        private float ApproximatedDistance(Vector3 p1, Vector3 p2)
-        {
-            float manhattanDist = MathF.Abs(p1.X - p2.X) + MathF.Abs(p1.Y - p2.Y) + MathF.Abs(p1.Z - p2.Z);
-            //Multiply by this factor to make it only return values equal or smaller to the actual dist
-            return manhattanDist * manhattanWorstCaseScaleCorrection;
-        }
-
     }
 }

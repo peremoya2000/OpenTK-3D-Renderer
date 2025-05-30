@@ -226,7 +226,7 @@ namespace OpenTK_3D_Renderer
         private void AddNewTriangle(string[] indices)
         {
             List<int> data = new List<int>();
-            foreach (var subIndex in indices)
+            foreach (string subIndex in indices)
             {
                 data.AddRange(StringsToInts(subIndex.Split("/")));
             }
