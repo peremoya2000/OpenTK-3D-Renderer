@@ -7,6 +7,8 @@ namespace OpenTK_3D_Renderer
 {
     public class MeshedObject
     {
+        public const int VERTEX_SIZE = 8;
+
         public Transform MeshTransform;
         public float[] Vertices => vertices;
         public uint[] Indices => indices;
@@ -23,7 +25,7 @@ namespace OpenTK_3D_Renderer
             MeshTransform = transform;
             material = mat;
             vertices = uncompressedVertexBuffer;
-            ModelFormatConverter.SimplifyToIndexFormat(8, ref vertices, out indices);
+            ModelFormatConverter.SimplifyToIndexFormat(VERTEX_SIZE, ref vertices, out indices);
             UpdateMeshRadius();
 
             InitializeGlBuffers();
@@ -121,6 +123,11 @@ namespace OpenTK_3D_Renderer
             GL.DrawElements(PrimitiveType.Triangles, indices.Length, DrawElementsType.UnsignedInt, 0);
         }
 
+        public float SqrDistanceToCamera(Vector3 cameraPos)
+        {
+            return MathF.Max(0, (MeshTransform.Position - cameraPos).LengthSquared - GetMeshRadius() * GetMeshRadius());
+        }
+
         private void InitializeGlBuffers()
         {
             vertexBufferObject = GL.GenBuffer();
@@ -196,7 +203,7 @@ namespace OpenTK_3D_Renderer
         {
             Vector3 tVert;
             float maxLengthSquared = 0;
-            for (int i = 0; i < vertices.Length; i += 3)
+            for (int i = 0; i < vertices.Length; i += VERTEX_SIZE)
             {
                 tVert = new Vector3(vertices[i], vertices[i + 1], vertices[i + 2]);
                 if (tVert.LengthSquared > maxLengthSquared)
@@ -205,6 +212,31 @@ namespace OpenTK_3D_Renderer
                 }
             }
             meshMaxRadius = MathF.Sqrt(maxLengthSquared);
+        }
+    }
+
+    public class MeshedObjectDistanceComparer : IComparer<MeshedObject>
+    {
+        private readonly Camera cam;
+        public MeshedObjectDistanceComparer(Camera cam)
+        {
+            this.cam = cam;
+        }
+        public int Compare(MeshedObject a, MeshedObject b)
+        {
+            Vector3 camPos = cam.Position;
+            float da = MathF.Max(0, (a.MeshTransform.Position - camPos).LengthSquared - a.GetMeshRadius() * a.GetMeshRadius());
+            float db = MathF.Max(0, (b.MeshTransform.Position - camPos).LengthSquared - b.GetMeshRadius() * b.GetMeshRadius());
+            int result = da.CompareTo(db);
+
+            if (result != 0)
+            {
+                return result;
+            }
+            else
+            {
+                return a.Vertices.Length.CompareTo(b.Vertices.Length);
+            }
         }
     }
 }

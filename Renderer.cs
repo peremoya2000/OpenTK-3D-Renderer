@@ -3,6 +3,7 @@ using OpenTK.Mathematics;
 using OpenTK.Windowing.Common;
 using OpenTK.Windowing.Desktop;
 using OpenTK.Windowing.GraphicsLibraryFramework;
+using System;
 using System.Collections.Generic;
 
 namespace OpenTK_3D_Renderer
@@ -10,9 +11,11 @@ namespace OpenTK_3D_Renderer
     public class Renderer : GameWindow
     {
         public const short MaxSimultaneousLights = 16;
+        public const short MaxSortableListSize = 1024;
         private readonly Input input;
         private readonly Camera camera;
         private readonly LightManager lightManager;
+        private readonly MeshedObjectDistanceComparer meshedObjectDistanceComparer;
         private List<MeshedObject> renderedMeshes;
         private bool loadingScene = true;
 
@@ -27,6 +30,7 @@ namespace OpenTK_3D_Renderer
             camera = new Camera(new Vector3(0, 0, 3), input, width / height);
             lightManager = new LightManager();
             renderedMeshes = new List<MeshedObject>();
+            meshedObjectDistanceComparer = new MeshedObjectDistanceComparer(camera);
         }
 
         private void OnCloseInput()
@@ -46,6 +50,8 @@ namespace OpenTK_3D_Renderer
 
             GL.ClearColor(0.2f, 0.3f, 0.3f, 1.0f);
             GL.Enable(EnableCap.DepthTest);
+            GL.Enable(EnableCap.CullFace);
+            GL.DepthMask(true);
 
             ISceneLoader sceneLoader = new ColladaSceneLoader();
             sceneLoader.LoadScene(Project.Resources + "sample-scene.dae", out renderedMeshes, out List<Light> lights);
@@ -95,6 +101,11 @@ namespace OpenTK_3D_Renderer
             //TODO: transparent materials
             //TODO: shadowcasting
             //TODO: add normal map support?
+
+            if (renderedMeshes.Count <= MaxSortableListSize)
+            {
+                renderedMeshes.Sort(meshedObjectDistanceComparer);
+            }
 
             for (short i = 0; i < renderedMeshes.Count; ++i)
             {
