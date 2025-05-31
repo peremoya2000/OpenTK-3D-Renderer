@@ -16,7 +16,7 @@ namespace OpenTK_3D_Renderer
         }
 
         private const float FLOAT_ROUNDING_THRESHOLD = 0.0001f;
-        private XElement loadedDocument;
+        private XElement loadedDocument, sceneTransformsParent;
         private Dictionary<string, MaterialData> materialDataCache;
 
         public void LoadScene(string filePath, out List<MeshedObject> meshes, out List<Light> lights)
@@ -33,6 +33,7 @@ namespace OpenTK_3D_Renderer
             meshes = CreateMeshes();
 
             loadedDocument = null;
+            sceneTransformsParent = null;
         }
 
         private List<Light> CreateLights(XElement lightsElement)
@@ -278,7 +279,7 @@ namespace OpenTK_3D_Renderer
                 return null;
             }
 
-            XElement positionData = RecursiveGetChildElementWithTag(sceneObjectData, "translate");
+            XElement positionData = RecursiveGetChildElementWithTag(sceneObjectData, "translate", 2);
 
             if (positionData == null)
             {
@@ -333,10 +334,13 @@ namespace OpenTK_3D_Renderer
 
         private XElement GetSceneObjectTransformData(string objectName)
         {
-            XElement sceneData = RecursiveGetChildElementWithTag(loadedDocument, "visual_scene", 4);
-            if (sceneData != null)
+            if (sceneTransformsParent == null)
             {
-                List<XElement> nodes = RecursiveGetChildrenWithTag(sceneData, "node", 2);
+                sceneTransformsParent = RecursiveGetChildElementWithTag(loadedDocument, "visual_scene", 4);
+            }
+            if (sceneTransformsParent != null)
+            {
+                List<XElement> nodes = RecursiveGetChildrenWithTag(sceneTransformsParent, "node", 2);
                 for (int i = 0; i < nodes.Count; ++i)
                 {
                     XAttribute nameAtribute = nodes[i].Attributes().Where(x => x.Name.LocalName.Contains("name", StringComparison.OrdinalIgnoreCase)).FirstOrDefault();
