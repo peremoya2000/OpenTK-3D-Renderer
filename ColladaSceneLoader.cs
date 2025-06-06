@@ -109,6 +109,9 @@ namespace OpenTK_3D_Renderer
                 List<XElement> vertexDataSources = RecursiveGetChildrenWithTag(meshDataElements[i], "source", 3);
                 float[] uncompressedVertexBuffer = ReadMeshVertexBuffer(trianglesData, vertexDataSources);
 
+
+                //TODO: implement texture loading
+
                 string materialName = (string)trianglesData.Attributes().FirstOrDefault(x => x.Name.LocalName.Contains("material", StringComparison.OrdinalIgnoreCase));
                 Material material;
                 if (string.IsNullOrEmpty(materialName))
