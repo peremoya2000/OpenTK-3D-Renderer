@@ -1,6 +1,7 @@
 ﻿using OpenTK.Mathematics;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Globalization;
 using System.Linq;
 using System.Xml.Linq;
@@ -13,6 +14,7 @@ namespace OpenTK_3D_Renderer
         {
             public Vector4 DiffuseTint;
             public Vector4 Emissive;
+            public string LocalPathToMainTexture;
         }
 
         private const float FLOAT_ROUNDING_THRESHOLD = 0.0001f;
@@ -42,12 +44,12 @@ namespace OpenTK_3D_Renderer
 
             foreach (XElement lightElement in lightsElement.Elements())
             {
-                var lightNameData = lightElement.Attributes().Where(x => x.Name.LocalName.Contains("name", StringComparison.OrdinalIgnoreCase)).FirstOrDefault();
-                if (lightNameData == default)
+                var lightIdData = lightElement.Attributes().Where(x => x.Name.LocalName.Contains("id", StringComparison.OrdinalIgnoreCase)).FirstOrDefault();
+                if (lightIdData == default)
                 {
                     continue;
                 }
-                string lightName = (string)lightNameData;
+                string lightId = (string)lightIdData;
                 var lightData = RecursiveGetChildElementWithTag(lightElement, "point");
                 if (lightData != null)
                 {
@@ -58,7 +60,7 @@ namespace OpenTK_3D_Renderer
                     {
                         rawColorVector /= intensity;
                     }
-                    Transform lightTransform = GetSceneObjectTransform(lightName, true);
+                    Transform lightTransform = GetSceneObjectTransform(lightId, true);
                     Light newLight = new PointLight(lightTransform.Position, rawColorVector, intensity, (intensity + 1) * .5f);
                     lights.Add(newLight);
                 }
@@ -78,7 +80,7 @@ namespace OpenTK_3D_Renderer
                     {
                         rawColorVector /= intensity;
                     }
-                    Transform lightTransform = GetSceneObjectTransform(lightName);
+                    Transform lightTransform = GetSceneObjectTransform(lightId);
                     Vector3 lightDirection = Vector3.Transform(-Vector3.UnitY, lightTransform.Rotation);
                     Light newLight = new DirectionalLight(lightDirection, rawColorVector, intensity);
                     lights.Add(newLight);
@@ -97,20 +99,17 @@ namespace OpenTK_3D_Renderer
             List<XElement> meshDataElements = RecursiveGetChildrenWithTag(geometryLibrary, "geometry", 1);
             for (int i = 0; i < meshDataElements.Count; ++i)
             {
-                string meshName = (string)meshDataElements[i].Attributes().Where(x => x.Name.LocalName.Contains("name", StringComparison.OrdinalIgnoreCase)).FirstOrDefault();
-                if (meshName == default)
+                string meshId = (string)meshDataElements[i].Attributes().Where(x => x.Name.LocalName.Contains("id", StringComparison.OrdinalIgnoreCase)).FirstOrDefault();
+                if (meshId == default)
                 {
                     continue;
                 }
 
-                Transform meshedObjectTransform = GetSceneObjectTransform(meshName);
+                Transform meshedObjectTransform = GetSceneObjectTransform(meshId);
 
                 XElement trianglesData = RecursiveGetChildElementWithTag(meshDataElements[i], "triangles", 3);
                 List<XElement> vertexDataSources = RecursiveGetChildrenWithTag(meshDataElements[i], "source", 3);
                 float[] uncompressedVertexBuffer = ReadMeshVertexBuffer(trianglesData, vertexDataSources);
-
-
-                //TODO: implement texture loading
 
                 string materialName = (string)trianglesData.Attributes().FirstOrDefault(x => x.Name.LocalName.Contains("material", StringComparison.OrdinalIgnoreCase));
                 Material material;
@@ -120,7 +119,9 @@ namespace OpenTK_3D_Renderer
                 }
                 else
                 {
-                    material = new Material(new Texture(Project.Resources + "crateTex.png"), Vector3.One, materialDataCache[materialName].DiffuseTint);
+                    var matData = materialDataCache[materialName];
+                    string localTexturePath = string.IsNullOrEmpty(matData.LocalPathToMainTexture) ? Project.DefaultTex : matData.LocalPathToMainTexture;
+                    material = new Material(new Texture(Project.Resources + localTexturePath), Vector3.One, matData.DiffuseTint);
                 }
 
                 MeshedObject newMesh = new MeshedObject(meshedObjectTransform, uncompressedVertexBuffer, material);
@@ -142,7 +143,9 @@ namespace OpenTK_3D_Renderer
             List<float> vertexPositions = ParseToFloatArray(vertexPositionsData.Split(" ")).ToList();
             string vertexNormalsData = (string)vertexDataSources.Find(x => ((string)x.FirstAttribute).Contains("mesh-normals", StringComparison.OrdinalIgnoreCase));
             List<float> vertexNormals = ParseToFloatArray(vertexNormalsData.Split(" ")).ToList();
-            string vertexTexCoordsData = (string)vertexDataSources.Find(x => ((string)x.FirstAttribute).Contains("mesh-map-0", StringComparison.OrdinalIgnoreCase));
+            vertexNormals = NormalizeVector3List(vertexNormals);
+            string vertexTexCoordsData = (string)vertexDataSources.Find(x => ((string)x.FirstAttribute).Contains("mesh-map-0", StringComparison.OrdinalIgnoreCase)
+                                                                            || ((string)x.FirstAttribute).Contains("mesh-map", StringComparison.OrdinalIgnoreCase));
             List<float> texCoords = ParseToFloatArray(vertexTexCoordsData.Split(" ")).ToList();
 
             int[] indexList = ParseToIntArray(((string)RecursiveGetChildElementWithTag(trianglesData, "p", 1, false)).Split(" "));
@@ -202,7 +205,9 @@ namespace OpenTK_3D_Renderer
                 results.Capacity = descendants.Length / 2;
                 foreach (var child in descendants)
                 {
-                    if (!string.IsNullOrEmpty(child.Name.LocalName) && child.Name.LocalName.Contains(tagName, StringComparison.OrdinalIgnoreCase))
+                    if (!string.IsNullOrEmpty(child.Name.LocalName)
+                        && child.Name.LocalName.Contains(tagName, StringComparison.OrdinalIgnoreCase)
+                        && !results.Contains(child))
                     {
                         results.Add(child);
                     }
@@ -257,6 +262,21 @@ namespace OpenTK_3D_Renderer
             return floats;
         }
 
+        private List<float> NormalizeVector3List(List<float> floats)
+        {
+            int l = floats.Count;
+            Debug.Assert(l % 3 == 0, "The list cannot be grouped into Vector3s");
+            for (int i = 0; i < l; i += 3)
+            {
+                Vector3 v = new(floats[i], floats[i + 1], floats[i + 2]);
+                v.Normalize();
+                floats[i] = v.X;
+                floats[i + 1] = v.Y;
+                floats[i + 2] = v.Z;
+            }
+            return floats;
+        }
+
         private int[] ParseToIntArray(string[] source)
         {
             int length = source.Length;
@@ -274,9 +294,9 @@ namespace OpenTK_3D_Renderer
                 || (acceptPartialMatch && element.Name.LocalName.Contains(nameToMatch, StringComparison.InvariantCultureIgnoreCase));
         }
 
-        private Transform GetSceneObjectTransform(string objectName, bool positionOnly = false)
+        private Transform GetSceneObjectTransform(string objectId, bool positionOnly = false)
         {
-            XElement sceneObjectData = GetSceneObjectTransformData(objectName);
+            XElement sceneObjectData = GetSceneObjectTransformData(objectId);
             if (sceneObjectData == null)
             {
                 return null;
@@ -335,7 +355,7 @@ namespace OpenTK_3D_Renderer
             return new Transform(position, rotation, uniformScale);
         }
 
-        private XElement GetSceneObjectTransformData(string objectName)
+        private XElement GetSceneObjectTransformData(string objectId)
         {
             if (sceneTransformsParent == null)
             {
@@ -343,18 +363,37 @@ namespace OpenTK_3D_Renderer
             }
             if (sceneTransformsParent != null)
             {
-                List<XElement> nodes = RecursiveGetChildrenWithTag(sceneTransformsParent, "node", 2);
+                List<XElement> nodes = RecursiveGetChildrenWithTag(sceneTransformsParent, "node");
                 for (int i = 0; i < nodes.Count; ++i)
                 {
-                    XAttribute nameAtribute = nodes[i].Attributes().Where(x => x.Name.LocalName.Contains("name", StringComparison.OrdinalIgnoreCase)).FirstOrDefault();
-                    if (nameAtribute != default && ((string)nameAtribute).Equals(objectName))
+                    if (TransformNodeContainsId(nodes[i], objectId))
                     {
-                        return nameAtribute.Parent;
+                        return nodes[i];
                     }
                 }
             }
 
             return null;
+        }
+
+        private bool TransformNodeContainsId(XElement transformNode, string id)
+        {
+            var meshInstanceData = RecursiveGetChildElementWithTag(transformNode, "instance_geometry", 1);
+            if (meshInstanceData != null)
+            {
+                XAttribute urlAttribute = meshInstanceData.Attributes().FirstOrDefault(x => x.Name.LocalName.Contains("url", StringComparison.OrdinalIgnoreCase));
+                return urlAttribute != null && ((string)urlAttribute).Contains(id, StringComparison.OrdinalIgnoreCase);
+            }
+
+            var lightInstanceData = RecursiveGetChildElementWithTag(transformNode, "instance_light", 1);
+            if (lightInstanceData != null)
+            {
+                XAttribute urlAttribute = lightInstanceData.Attributes().FirstOrDefault(x => x.Name.LocalName.Contains("url", StringComparison.OrdinalIgnoreCase));
+                return urlAttribute != null && ((string)urlAttribute).Contains(id, StringComparison.OrdinalIgnoreCase);
+            }
+
+            XAttribute nameAtribute = transformNode.Attributes().Where(x => x.Name.LocalName.Contains("id", StringComparison.OrdinalIgnoreCase)).FirstOrDefault();
+            return nameAtribute != default && ((string)nameAtribute).Equals(id);
         }
 
         private Vector3 ExtractRotationAngles(List<XElement> elements)
@@ -397,16 +436,53 @@ namespace OpenTK_3D_Renderer
 
                 XElement effectData = effects.Find(x => ((string)x.FirstAttribute).Contains(effectId, StringComparison.OrdinalIgnoreCase));
 
-                XElement diffuseTintData = RecursiveGetChildElementWithTag(RecursiveGetChildElementWithTag(effectData, "diffuse"), "color", 2);
+                XElement diffuseData = RecursiveGetChildElementWithTag(effectData, "diffuse");
+                XElement diffuseTintData = RecursiveGetChildElementWithTag(diffuseData, "color", 2);
+                XElement emisionData = RecursiveGetChildElementWithTag(RecursiveGetChildElementWithTag(effectData, "emission"), "color", 2);
 
                 MaterialData matData = new();
-                matData.DiffuseTint = GetVector4(diffuseTintData);
+                if (diffuseTintData != null)
+                {
+                    matData.DiffuseTint = GetVector4(diffuseTintData);
+                }
+                else
+                {
+                    matData.DiffuseTint = Vector4.One;
+                }
+                if (emisionData != null)
+                {
+                    matData.Emissive = GetVector4(emisionData);
+                }
+
+                XElement diffuseTextureData = RecursiveGetChildElementWithTag(diffuseData, "texture", 2);
+                if (diffuseTextureData != null)
+                {
+                    matData.LocalPathToMainTexture = GetMainTexLocalPath(effectData, diffuseTextureData);
+                }
 
                 materialDataCache.Add(materialId, matData);
             }
 
         }
 
+        private string GetMainTexLocalPath(XElement effectData, XElement diffuseTextureData)
+        {
+            string sampler = (string)diffuseTextureData.FirstAttribute;
 
+            List<XElement> effectParams = RecursiveGetChildrenWithTag(effectData, "newparam", 4).Where(x => x.FirstAttribute != null).ToList();
+            XElement samplerParent = effectParams.FirstOrDefault(x => (string)(x.FirstAttribute) == sampler);
+            if (samplerParent == null)
+            {
+                return null;
+            }
+
+            string surfaceId = (string)RecursiveGetChildElementWithTag(samplerParent, "source");
+            XElement surfaceParent = effectParams.FirstOrDefault(x => (string)(x.FirstAttribute) == surfaceId);
+            string imageId = (string)RecursiveGetChildElementWithTag(surfaceParent, "init_from");
+
+            List<XElement> images = RecursiveGetChildrenWithTag(loadedDocument, "image");
+            XElement image = images.FirstOrDefault(x => x.FirstAttribute != null && (string)(x.FirstAttribute) == imageId);
+            return (image != null) ? (string)image.Descendants().First() : null;
+        }
     }
 }

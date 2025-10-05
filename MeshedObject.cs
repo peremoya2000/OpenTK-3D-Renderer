@@ -116,9 +116,12 @@ namespace OpenTK_3D_Renderer
             UpdateLightsData(lights);
 
             shader.Use();
+            shader.SetInt("material.mainTex", 0);
+            material.MainTexture.Use();
             UpdateModelData();
             UpdateCameraData(camera);
 
+            //TODO: either reuse resources when meshes are identical or use DrawElementsInstanced
             GL.BindVertexArray(vertexArrayObject);
             GL.DrawElements(PrimitiveType.Triangles, indices.Length, DrawElementsType.UnsignedInt, 0);
         }
@@ -189,7 +192,7 @@ namespace OpenTK_3D_Renderer
         {
             Matrix4 model = MeshTransform.GetModelMatrix();
             shader.SetMatrix4("model", model);
-            Matrix3 normalRot = new Matrix3(Matrix4.Transpose(model.Inverted()));
+            Matrix3 normalRot = Matrix3.Transpose(new Matrix3(model).Inverted());
             shader.SetMatrix3("normalRot", normalRot);
         }
         private void UpdateCameraData(Camera camera)

@@ -8,5 +8,6 @@ namespace OpenTK_3D_Renderer
     {
         public const string Root = "../../../";
         public const string Resources = Root + "Resources/";
+        public const string DefaultTex = "defaultTex.png";
     }
 }

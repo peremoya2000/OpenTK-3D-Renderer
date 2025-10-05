@@ -11,7 +11,7 @@ namespace OpenTK_3D_Renderer
 
         public Material()
         {
-            MainTexture = new Texture(Project.Resources + "crateTex.png");
+            MainTexture = new Texture(Project.Resources + Project.DefaultTex);
             AmbientTint = Vector3.One;
             DiffuseTint = Vector4.One;
             Shininess = 32;

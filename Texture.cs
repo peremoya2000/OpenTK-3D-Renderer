@@ -1,10 +1,11 @@
 ﻿using OpenTK.Graphics.OpenGL4;
 using StbImageSharp;
+using System;
 using System.IO;
 
 namespace OpenTK_3D_Renderer
 {
-    public class Texture
+    public class Texture : IEquatable<Texture>
     {
         private readonly int handle;
         private ImageResult image;
@@ -13,7 +14,7 @@ namespace OpenTK_3D_Renderer
         {
             pathToFile = projectFilePath;
             handle = GL.GenTexture();
-            Bind();
+            Use();
             image = LoadImage();
             GL.TexImage2D(TextureTarget.Texture2D, 0, PixelInternalFormat.Rgba, image.Width, image.Height, 0, PixelFormat.Rgba, PixelType.UnsignedByte, image.Data);
             GL.GenerateTextureMipmap(handle);
@@ -22,20 +23,21 @@ namespace OpenTK_3D_Renderer
         {
             pathToFile = projectFilePath;
             handle = GL.GenTexture();
-            Bind();
+            Use();
             this.image = image;
             GL.TexImage2D(TextureTarget.Texture2D, 0, PixelInternalFormat.Rgba, image.Width, image.Height, 0, PixelFormat.Rgba, PixelType.UnsignedByte, image.Data);
             GL.GenerateTextureMipmap(handle);
         }
 
+        public void Use()
+        {
+            GL.ActiveTexture(TextureUnit.Texture0);
+            GL.BindTexture(TextureTarget.Texture2D, handle);
+        }
+
         public Texture GetCopy()
         {
             return new Texture(pathToFile, image);
-        }
-
-        private void Bind()
-        {
-            GL.BindTexture(TextureTarget.Texture2D, handle);
         }
 
         private ImageResult LoadImage()
@@ -48,5 +50,9 @@ namespace OpenTK_3D_Renderer
             return ImageResult.FromStream(File.OpenRead(pathToFile), ColorComponents.RedGreenBlueAlpha);
         }
 
+        public bool Equals(Texture other)
+        {
+            return pathToFile == other.pathToFile && image.Data.Length == other.image.Data.Length;
+        }
     }
 }

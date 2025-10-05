@@ -13,7 +13,7 @@ uniform mat3 normalRot;
 
 void main(void)
 {
-    normal = aNormal * normalRot;
+    normal = normalize(aNormal * normalRot);
     texCoord = aTexCoord;
     vec4 worldPos = vec4(aPosition, 1.0) * model;
     fragWorldPos = worldPos.xyz;

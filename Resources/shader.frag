@@ -33,7 +33,7 @@ uniform vec3 viewPos;
 vec3 shadeFragment(vec4 matData, vec3 lightDir, vec3 lightColor)
 {
     vec3 surfaceColor = matData.rgb;
-    float specularMask = matData.a; 
+    float specularMask = matData.a;
 
     vec3 ambient = lightColor * material.ambientTint * surfaceColor;
 

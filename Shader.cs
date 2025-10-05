@@ -160,7 +160,7 @@ namespace OpenTK_3D_Renderer
         {
             GL.GetProgram(Handle, GetProgramParameterName.ActiveUniforms, out var numberOfUniforms);
 
-            uniformLocations = new Dictionary<string, int>();
+            uniformLocations = new Dictionary<string, int>(numberOfUniforms);
 
             for (short i = 0; i < numberOfUniforms; ++i)
             {
