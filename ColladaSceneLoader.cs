@@ -174,23 +174,14 @@ namespace OpenTK_3D_Renderer
 
         private XElement RecursiveGetChildElementWithTag(XElement currentElement, string tagName, int maxDepth = 10, bool acceptPartialMatches = true)
         {
-            if (currentElement != null && currentElement.HasElements && --maxDepth >= 0)
+            if (currentElement == null || !currentElement.HasElements)
+                return null;
+
+            foreach (var descendant in currentElement.Descendants())
             {
-                XElement[] descendants = currentElement.Descendants().ToArray();
-                foreach (var child in descendants)
+                if (!string.IsNullOrEmpty(descendant.Name.LocalName) && ElementMatchesString(descendant, tagName, acceptPartialMatches))
                 {
-                    if (!string.IsNullOrEmpty(child.Name.LocalName) && ElementMatchesString(child, tagName, acceptPartialMatches))
-                    {
-                        return child;
-                    }
-                    else
-                    {
-                        XElement result = RecursiveGetChildElementWithTag(child, tagName, maxDepth);
-                        if (result != null)
-                        {
-                            return result;
-                        }
-                    }
+                    return descendant;
                 }
             }
             return null;
@@ -199,26 +190,15 @@ namespace OpenTK_3D_Renderer
         private List<XElement> RecursiveGetChildrenWithTag(XElement currentElement, string tagName, int maxDepth = 8)
         {
             List<XElement> results = new();
-            if (currentElement != null && currentElement.HasElements && --maxDepth >= 0)
+            if (currentElement == null || !currentElement.HasElements)
+                return results;
+
+            foreach (var descendant in currentElement.Descendants())
             {
-                XElement[] descendants = currentElement.Descendants().ToArray();
-                results.Capacity = descendants.Length / 2;
-                foreach (var child in descendants)
+                if (!string.IsNullOrEmpty(descendant.Name.LocalName)
+                    && descendant.Name.LocalName.Contains(tagName, StringComparison.OrdinalIgnoreCase))
                 {
-                    if (!string.IsNullOrEmpty(child.Name.LocalName)
-                        && child.Name.LocalName.Contains(tagName, StringComparison.OrdinalIgnoreCase)
-                        && !results.Contains(child))
-                    {
-                        results.Add(child);
-                    }
-                    else
-                    {
-                        List<XElement> nestedResults = RecursiveGetChildrenWithTag(child, tagName, maxDepth);
-                        if (nestedResults != null && nestedResults.Count > 0)
-                        {
-                            results.AddRange(nestedResults);
-                        }
-                    }
+                    results.Add(descendant);
                 }
             }
             return results;

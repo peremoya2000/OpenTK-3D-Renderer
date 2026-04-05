@@ -3,7 +3,7 @@ using System.Collections.Generic;
 
 namespace OpenTK_3D_Renderer
 {
-    static class ModelFormatConverter
+    public static class ModelFormatConverter
     {
         private class FloatArrayComparer : IEqualityComparer<float[]>
         {
@@ -63,11 +63,11 @@ namespace OpenTK_3D_Renderer
             //PrintVertexBuffer();
             //PrintIndexBuffer(indexBuffer);
             Console.WriteLine("Previous vert count: " + vertices.Length / vertexSize + ". Simplified vert count: " + vertexBuffer.Count);
-            vertices = GetVertexBuffer(vertexBuffer, vertexSize);
+            vertices = GetFlatVertexBuffer(vertexBuffer, vertexSize);
             indices = indexBuffer.ToArray();
         }
 
-        public static float[] GetVertexBuffer(List<float[]> vertexBuffer, int vertSize)
+        public static float[] GetFlatVertexBuffer(List<float[]> vertexBuffer, int vertSize)
         {
             float[] unifiedVertexBuffer = new float[vertexBuffer.Count * vertSize];
             for (int i = 0; i < vertexBuffer.Count; ++i)
@@ -86,7 +86,7 @@ namespace OpenTK_3D_Renderer
             List<float> result = new List<float>();
             foreach (int index in indexBuffer)
             {
-                var tVertex = vertexBuffer[index..(index + vertexSize)];
+                var tVertex = vertexBuffer[(index * vertexSize)..(index * vertexSize + vertexSize)];
                 result.AddRange(tVertex);
             }
             Console.WriteLine("VB Length is: " + result.Count);
