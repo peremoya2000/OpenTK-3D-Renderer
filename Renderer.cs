@@ -16,6 +16,7 @@ namespace OpenTK_3D_Renderer
         private readonly Camera camera;
         private readonly LightManager lightManager;
         private readonly MeshedObjectDistanceComparer meshedObjectDistanceComparer;
+        private readonly List<Light> relevantLightsBuffer = new();
         private List<MeshedObject> renderedMeshes;
         private bool loadingScene = true;
 
@@ -27,7 +28,7 @@ namespace OpenTK_3D_Renderer
             input = new Input(KeyboardState, MouseState);
             input.OnClose += OnCloseInput;
             CursorState = CursorState.Grabbed;
-            camera = new Camera(new Vector3(0, 0, 3), input, width / height);
+            camera = new Camera(new Vector3(0, 0, 3), input, (float)width / height);
             lightManager = new LightManager();
             renderedMeshes = new List<MeshedObject>();
             meshedObjectDistanceComparer = new MeshedObjectDistanceComparer(camera);
@@ -93,11 +94,6 @@ namespace OpenTK_3D_Renderer
 
             GL.Clear(ClearBufferMask.ColorBufferBit | ClearBufferMask.DepthBufferBit);
 
-            if (KeyboardState.IsKeyDown(Keys.Escape))
-            {
-                Close();
-            }
-
             //TODO: transparent materials
             //TODO: shadowcasting
             //TODO: add normal map support?
@@ -112,8 +108,8 @@ namespace OpenTK_3D_Renderer
                 MeshedObject mesh = renderedMeshes[i];
                 if (mesh.IsInsideCameraFrustum(camera))
                 {
-                    var lights = lightManager.GetRelevantLightsForObject(mesh);
-                    mesh.Draw(camera, lights);
+                    lightManager.GetRelevantLightsForObject(mesh, relevantLightsBuffer);
+                    mesh.Draw(camera, relevantLightsBuffer);
                 }
             }
 

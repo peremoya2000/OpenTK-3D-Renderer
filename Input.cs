@@ -68,7 +68,10 @@ namespace OpenTK_3D_Renderer
                 CameraMovement -= Vector3.UnitY; // Down
             }
 
-            CameraMovement.Normalize();
+            if (CameraMovement.LengthSquared > 0)
+            {
+                CameraMovement.Normalize();
+            }
 
             if (keyboard.IsKeyPressed(Keys.R))
             {

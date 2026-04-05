@@ -4,7 +4,7 @@ using System.Collections.Generic;
 
 namespace OpenTK_3D_Renderer
 {
-    class LightManager
+    public class LightManager
     {
         private readonly List<Light> lights;
 
@@ -15,7 +15,7 @@ namespace OpenTK_3D_Renderer
 
         public void AddLight(Light light)
         {
-            if (light.Type == LightType.DirectionalLight)
+            if (light is DirectionalLight)
             {
                 lights.Insert(0, light);
             }
@@ -36,15 +36,14 @@ namespace OpenTK_3D_Renderer
         }
 
         //TODO: reduce time complexity to lower than O(N) (e.g. spatial hashing)?
-        public List<Light> GetRelevantLightsForObject(MeshedObject obj)
+        public void GetRelevantLightsForObject(MeshedObject obj, List<Light> result)
         {
-            List<Light> result = new List<Light>();
+            result.Clear();
             for (short i = 0; i < lights.Count; ++i)
             {
                 Light light = lights[i];
-                if (light.Type == LightType.PointLight)
+                if (light is PointLight pointLight)
                 {
-                    PointLight pointLight = (PointLight)light;
                     float combinedRadius = pointLight.Radius + obj.GetMeshRadius();
                     if ((pointLight.InternalVector.Xyz - obj.MeshTransform.Position).LengthSquared < combinedRadius * combinedRadius)
                     {
@@ -58,10 +57,9 @@ namespace OpenTK_3D_Renderer
                 if (result.Count >= Renderer.MaxSimultaneousLights)
                 {
                     Console.WriteLine("Too many relevant lights, some might be skipped");
-                    return result;
+                    return;
                 }
             }
-            return result;
         }
     }
 }
