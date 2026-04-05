@@ -6,7 +6,7 @@ using System.IO;
 
 namespace OpenTK_3D_Renderer
 {
-    public class Shader
+    public class Shader : IDisposable
     {
         public int Handle { get;  private set; }
         private int vertexShader, fragmentShader;
@@ -29,7 +29,7 @@ namespace OpenTK_3D_Renderer
 
         public void Use()
         {
-            GL.UseProgram(Handle);
+            RendererState.UseShaderProgram(Handle);
         }
 
         public void Dispose()
@@ -45,37 +45,37 @@ namespace OpenTK_3D_Renderer
 
         public void SetInt(string name, int data)
         {
-            GL.UseProgram(Handle);
+            RendererState.UseShaderProgram(Handle);
             GL.Uniform1(uniformLocations[name], data);
         }
 
         public void SetFloat(string name, float data)
         {
-            GL.UseProgram(Handle);
+            RendererState.UseShaderProgram(Handle);
             GL.Uniform1(uniformLocations[name], data);
         }
 
         public void SetMatrix3(string name, Matrix3 data)
         {
-            GL.UseProgram(Handle);
+            RendererState.UseShaderProgram(Handle);
             GL.UniformMatrix3(uniformLocations[name], true, ref data);
         }
 
         public void SetMatrix4(string name, Matrix4 data)
         {
-            GL.UseProgram(Handle);
+            RendererState.UseShaderProgram(Handle);
             GL.UniformMatrix4(uniformLocations[name], true, ref data);
         }
 
         public void SetVector3(string name, Vector3 data)
         {
-            GL.UseProgram(Handle);
+            RendererState.UseShaderProgram(Handle);
             GL.Uniform3(uniformLocations[name], data);
         } 
         
         public void SetVector4(string name, Vector4 data)
         {
-            GL.UseProgram(Handle);
+            RendererState.UseShaderProgram(Handle);
             GL.Uniform4(uniformLocations[name], data);
         }
 
@@ -88,12 +88,6 @@ namespace OpenTK_3D_Renderer
                 disposedValue = true;
             }
         }
-
-        ~Shader()
-        {
-            GL.DeleteProgram(Handle);
-        }
-
 
         private void LoadAndBindShaders(string vertexPath, string fragmentPath)
         {

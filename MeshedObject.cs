@@ -17,6 +17,12 @@ namespace OpenTK_3D_Renderer
         private readonly uint[] indices;
         private int vertexBufferObject, elementBufferObject, vertexArrayObject;
         private readonly float cullingMargin = 3.0f / MathF.Sqrt(3);
+        private struct LightUniformNames
+        {
+            public string Vector, Color, Intensity, Radius;
+        }
+        private static readonly LightUniformNames[] lightUniformsCache = new LightUniformNames[Renderer.MaxSimultaneousLights];
+
         private Shader shader;
         private Material material;
 
@@ -72,6 +78,10 @@ namespace OpenTK_3D_Renderer
         public void Dispose()
         {
             shader.Dispose();
+            material.MainTexture.Dispose();
+            GL.DeleteBuffer(vertexBufferObject);
+            GL.DeleteBuffer(elementBufferObject);
+            GL.DeleteVertexArray(vertexArrayObject);
         }
 
         //CombinedMethod
@@ -122,7 +132,7 @@ namespace OpenTK_3D_Renderer
             UpdateCameraData(camera);
 
             //TODO: either reuse resources when meshes are identical or use DrawElementsInstanced
-            GL.BindVertexArray(vertexArrayObject);
+            RendererState.BindVertexObjectArray(vertexArrayObject);
             GL.DrawElements(PrimitiveType.Triangles, indices.Length, DrawElementsType.UnsignedInt, 0);
         }
 
@@ -152,6 +162,7 @@ namespace OpenTK_3D_Renderer
             shader = new Shader(Project.Resources + "shader.vert", Project.Resources + "shader.frag");
             shader.Use();
 
+            CacheLightUniformNames();
             shader.SetVector3("material.ambientTint", material.AmbientTint);
             shader.SetVector3("material.diffuseTint", material.DiffuseTint.Xyz);
             shader.SetFloat("material.shininess", material.Shininess);
@@ -164,25 +175,44 @@ namespace OpenTK_3D_Renderer
             GL.VertexAttribPointer(texCoordLocation, 2, VertexAttribPointerType.Float, false, 8 * sizeof(float), 6 * sizeof(float));
         }
 
+        private static void CacheLightUniformNames()
+        {
+            if (lightUniformsCache != null && !string.IsNullOrEmpty(lightUniformsCache[0].Vector))
+            {
+                return;
+            }
+            for (int i = 0; i < Renderer.MaxSimultaneousLights; ++i)
+            {
+                string prefix = "lights[" + i + "]";
+                lightUniformsCache[i] = new LightUniformNames
+                {
+                    Vector = prefix + ".vector",
+                    Color = prefix + ".color",
+                    Intensity = prefix + ".intensity",
+                    Radius = prefix + ".radius"
+                };
+            }
+        }
+
         private void UpdateLightsData(List<Light> lights)
         {
             for (byte i = 0; i < lights.Count; ++i)
             {
-                string lightUniform = "lights[" + i + "]";
+                ref LightUniformNames names = ref lightUniformsCache[i];
 
                 switch (lights[i])
                 {
                     case DirectionalLight directional:
-                        shader.SetVector4(lightUniform + ".vector", directional.InternalVector);
-                        shader.SetVector3(lightUniform + ".color", directional.Color);
-                        shader.SetFloat(lightUniform + ".intensity", directional.Intensity);
+                        shader.SetVector4(names.Vector, directional.InternalVector);
+                        shader.SetVector3(names.Color, directional.Color);
+                        shader.SetFloat(names.Intensity, directional.Intensity);
                         break;
 
                     case PointLight point:
-                        shader.SetVector4(lightUniform + ".vector", point.InternalVector);
-                        shader.SetVector3(lightUniform + ".color", point.Color);
-                        shader.SetFloat(lightUniform + ".intensity", point.Intensity);
-                        shader.SetFloat(lightUniform + ".radius", point.Radius);
+                        shader.SetVector4(names.Vector, point.InternalVector);
+                        shader.SetVector3(names.Color, point.Color);
+                        shader.SetFloat(names.Intensity, point.Intensity);
+                        shader.SetFloat(names.Radius, point.Radius);
                         break;
                 }
             }

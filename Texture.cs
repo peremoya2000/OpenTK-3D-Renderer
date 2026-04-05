@@ -5,11 +5,11 @@ using System.IO;
 
 namespace OpenTK_3D_Renderer
 {
-    public class Texture : IEquatable<Texture>
+    public class Texture : IEquatable<Texture>, IDisposable
     {
         private readonly int handle;
-        private ImageResult image;
-        private string pathToFile;
+        private readonly ImageResult image;
+        private readonly string pathToFile;
         public Texture(string projectFilePath)
         {
             pathToFile = projectFilePath;
@@ -31,8 +31,7 @@ namespace OpenTK_3D_Renderer
 
         public void Use()
         {
-            GL.ActiveTexture(TextureUnit.Texture0);
-            GL.BindTexture(TextureTarget.Texture2D, handle);
+            RendererState.BindTextureToSlot(handle);
         }
 
         public Texture GetCopy()
@@ -47,7 +46,13 @@ namespace OpenTK_3D_Renderer
             StbImage.stbi_set_flip_vertically_on_load(1);
 
             // Load the image.
-            return ImageResult.FromStream(File.OpenRead(pathToFile), ColorComponents.RedGreenBlueAlpha);
+            using FileStream stream = File.OpenRead(pathToFile);
+            return ImageResult.FromStream(stream, ColorComponents.RedGreenBlueAlpha);
+        }
+
+        public void Dispose()
+        {
+            GL.DeleteTexture(handle);
         }
 
         public bool Equals(Texture other)
