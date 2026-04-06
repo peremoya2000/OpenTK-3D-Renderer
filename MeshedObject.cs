@@ -77,8 +77,6 @@ namespace OpenTK_3D_Renderer
 
         public void Dispose()
         {
-            shader.Dispose();
-            material.MainTexture.Dispose();
             GL.DeleteBuffer(vertexBufferObject);
             GL.DeleteBuffer(elementBufferObject);
             GL.DeleteVertexArray(vertexArrayObject);
@@ -159,7 +157,7 @@ namespace OpenTK_3D_Renderer
 
         private void InitializeShader()
         {
-            shader = new Shader(Project.Resources + "shader.vert", Project.Resources + "shader.frag");
+            shader = GLResourceCache.AddOrGetShader(Project.Resources + "shader.vert", Project.Resources + "shader.frag");
             shader.Use();
 
             CacheLightUniformNames();

@@ -121,7 +121,7 @@ namespace OpenTK_3D_Renderer
                 {
                     var matData = materialDataCache[materialName];
                     string localTexturePath = string.IsNullOrEmpty(matData.LocalPathToMainTexture) ? Project.DefaultTex : matData.LocalPathToMainTexture;
-                    material = new Material(new Texture(Project.Resources + localTexturePath), Vector3.One, matData.DiffuseTint);
+                    material = new Material(GLResourceCache.AddOrGetTexture(Project.Resources + localTexturePath), Vector3.One, matData.DiffuseTint);
                 }
 
                 MeshedObject newMesh = new MeshedObject(meshedObjectTransform, uncompressedVertexBuffer, material);

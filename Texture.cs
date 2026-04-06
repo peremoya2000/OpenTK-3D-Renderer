@@ -52,7 +52,10 @@ namespace OpenTK_3D_Renderer
 
         public void Dispose()
         {
+            RendererState.BindTextureToSlot(0);
+            
             GL.DeleteTexture(handle);
+            GC.SuppressFinalize(this);
         }
 
         public bool Equals(Texture other)
