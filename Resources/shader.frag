@@ -82,7 +82,7 @@ vec3 pointLight(Light light, vec4 texData)
 void main()
 {
     vec4 texData = texture(material.mainTex, texCoord);
-    vec3 result;
+    vec3 result = vec3(0.0);
 
     for(int i = 0; i < min(MAX_LIGHTS, lightCount); ++i)
     {

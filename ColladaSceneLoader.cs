@@ -298,7 +298,11 @@ namespace OpenTK_3D_Renderer
 
             List<XElement> rotationDataElements = RecursiveGetChildrenWithTag(sceneObjectData, "rotate", 1);
             Vector3 eulerAngles = ExtractRotationAngles(rotationDataElements);
-            Quaternion rotation = new(eulerAngles.X, eulerAngles.Y, eulerAngles.Z);
+            Quaternion rotation = Quaternion.FromEulerAngles(
+                MathHelper.DegreesToRadians(eulerAngles.X),
+                MathHelper.DegreesToRadians(eulerAngles.Y),
+                MathHelper.DegreesToRadians(eulerAngles.Z)
+            );
 
             XElement scaleData = RecursiveGetChildElementWithTag(sceneObjectData, "scale");
             Vector3 scaleVector = GetVector3(scaleData);
@@ -316,12 +320,16 @@ namespace OpenTK_3D_Renderer
             }
 
             float[] m = ParseToFloatArray(((string)matrixData).Split(" "));
-            Matrix4 matrix = new Matrix4(m[0], m[1], m[2], m[3],
-                                        m[4], m[5], m[6], m[7],
-                                        m[8], m[9], m[10], m[11],
-                                        m[12], m[13], m[14], m[15]);
+            // Transpose on construction: Map Collada's columns directly into OpenTK's rows.
+            Matrix4 matrix = new Matrix4(
+                m[0], m[4], m[8], m[12],
+                m[1], m[5], m[9], m[13],
+                m[2], m[6], m[10], m[14],
+                m[3], m[7], m[11], m[15]
+            );
 
-            Vector3 position = matrix.Column3.Xyz;
+            Vector3 position = matrix.ExtractTranslation();
+
             if (positionOnly)
             {
                 return new Transform(position);
