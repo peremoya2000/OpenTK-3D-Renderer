@@ -14,9 +14,10 @@ namespace OpenTK_3D_Renderer
         private readonly Input input;
         private readonly Camera camera;
         private readonly LightManager lightManager;
-        private readonly MeshedObjectDistanceComparer meshedObjectDistanceComparer;
+        private readonly ClosestMeshedObjectComparer meshedObjectDistanceComparer;
         private readonly List<Light> relevantLightsBuffer = new();
-        private List<MeshedObject> renderedMeshes;
+        private List<MeshedObject> sceneMeshes;
+        private readonly List<MeshedObject> opaqueQueue, transparentQueue;
         private bool loadingScene = true;
 
         public Renderer(int width, int height, string title) : base(GameWindowSettings.Default, new NativeWindowSettings() { Size = (width, height), Title = title })
@@ -29,8 +30,10 @@ namespace OpenTK_3D_Renderer
             CursorState = CursorState.Grabbed;
             camera = new Camera(new Vector3(0, 0, 3), input, (float)width / height);
             lightManager = new LightManager();
-            renderedMeshes = new List<MeshedObject>();
-            meshedObjectDistanceComparer = new MeshedObjectDistanceComparer(camera);
+            sceneMeshes = new List<MeshedObject>();
+            opaqueQueue = new List<MeshedObject>();
+            transparentQueue = new List<MeshedObject>();
+            meshedObjectDistanceComparer = new ClosestMeshedObjectComparer(camera);
         }
 
         private void OnCloseInput()
@@ -54,7 +57,9 @@ namespace OpenTK_3D_Renderer
             GL.DepthMask(true);
 
             ISceneLoader sceneLoader = new ColladaSceneLoader();
-            sceneLoader.LoadScene(Project.Resources + "sample-scene.dae", out renderedMeshes, out List<Light> lights);
+            sceneLoader.LoadScene(Project.Resources + "sample-scene.dae", out sceneMeshes, out List<Light> lights);
+            opaqueQueue.Capacity = sceneMeshes.Count / 2;
+            transparentQueue.Capacity = sceneMeshes.Count / 4;
 
             for (int i = 0; i < lights.Count; ++i)
             {
@@ -68,7 +73,7 @@ namespace OpenTK_3D_Renderer
         {
             base.OnUnload();
 
-            foreach (MeshedObject obj in renderedMeshes)
+            foreach (MeshedObject obj in sceneMeshes)
             {
                 obj.Dispose();
             }
@@ -94,24 +99,21 @@ namespace OpenTK_3D_Renderer
 
             GL.Clear(ClearBufferMask.ColorBufferBit | ClearBufferMask.DepthBufferBit);
 
-            //TODO: transparent materials
             //TODO: shadowcasting
             //TODO: add normal map support?
 
-            if (renderedMeshes.Count <= MaxSortableListSize)
-            {
-                renderedMeshes.Sort(meshedObjectDistanceComparer);
-            }
+            PopulateSortedQueues();
 
-            for (short i = 0; i < renderedMeshes.Count; ++i)
-            {
-                MeshedObject mesh = renderedMeshes[i];
-                if (mesh.IsInsideCameraFrustum(camera))
-                {
-                    lightManager.GetRelevantLightsForObject(mesh, relevantLightsBuffer);
-                    mesh.Draw(camera, relevantLightsBuffer);
-                }
-            }
+            DrawMeshes(opaqueQueue);
+
+            GL.Enable(EnableCap.Blend);
+            GL.BlendFunc(BlendingFactor.SrcAlpha, BlendingFactor.OneMinusSrcAlpha);
+            GL.DepthMask(false);
+
+            DrawMeshes(transparentQueue);
+
+            GL.DepthMask(true);
+            GL.Disable(EnableCap.Blend);
 
             SwapBuffers();
         }
@@ -129,6 +131,44 @@ namespace OpenTK_3D_Renderer
 
             input.Update();
             camera.Update(deltaTime);
+        }
+
+        private void PopulateSortedQueues()
+        {
+            opaqueQueue.Clear();
+            transparentQueue.Clear();
+
+            for (int i = 0; i < sceneMeshes.Count; ++i)
+            {
+                MeshedObject mesh = sceneMeshes[i];
+                if (mesh.IsInsideCameraFrustum(camera))
+                {
+                    if (mesh.IsTransparent())
+                    {
+                        transparentQueue.Add(mesh);
+                    }
+                    else
+                    {
+                        opaqueQueue.Add(mesh);
+                    }
+                }
+            }
+
+            if (opaqueQueue.Count <= MaxSortableListSize)
+            {
+                opaqueQueue.Sort(meshedObjectDistanceComparer);
+            }
+            transparentQueue.Sort((a, b) => meshedObjectDistanceComparer.Compare(b, a));
+        }
+
+        private void DrawMeshes(List<MeshedObject> meshedObjects)
+        {
+            for (short i = 0; i < meshedObjects.Count; ++i)
+            {
+                MeshedObject mesh = meshedObjects[i];
+                lightManager.GetRelevantLightsForObject(mesh, relevantLightsBuffer);
+                mesh.Draw(camera, relevantLightsBuffer);
+            }
         }
     }
 }

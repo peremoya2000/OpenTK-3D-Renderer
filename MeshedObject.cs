@@ -70,6 +70,11 @@ namespace OpenTK_3D_Renderer
             return material;
         }
 
+        public bool IsTransparent()
+        {
+            return material != null && material.Type == MaterialType.Transparent;
+        }
+
         public float GetMeshRadius()
         {
             return meshMaxRadius * MeshTransform.Scale;
@@ -157,13 +162,20 @@ namespace OpenTK_3D_Renderer
 
         private void InitializeShader()
         {
-            shader = GLResourceCache.AddOrGetShader(Project.Resources + "shader.vert", Project.Resources + "shader.frag");
+            string fragmentShaderName = (material.Type == MaterialType.Transparent) ? "shader_transparent.frag" : "shader_opaque.frag";
+            shader = GLResourceCache.AddOrGetShader(Project.Resources + "shader.vert", Project.Resources + fragmentShaderName);
             shader.Use();
 
             CacheLightUniformNames();
+
             shader.SetVector3("material.ambientTint", material.AmbientTint);
             shader.SetVector3("material.diffuseTint", material.DiffuseTint.Xyz);
             shader.SetFloat("material.shininess", material.Shininess);
+            if(material.Type == MaterialType.Transparent)
+            {
+                shader.SetFloat("material.opacity", material.Opacity);
+            }
+
             var normalLocation = shader.GetAttribLocation("aNormal");
             GL.EnableVertexAttribArray(normalLocation);
             GL.VertexAttribPointer(normalLocation, 3, VertexAttribPointerType.Float, false, 8 * sizeof(float), 3 * sizeof(float));
@@ -246,10 +258,10 @@ namespace OpenTK_3D_Renderer
         }
     }
 
-    public class MeshedObjectDistanceComparer : IComparer<MeshedObject>
+    public class ClosestMeshedObjectComparer : IComparer<MeshedObject>
     {
         private readonly Camera cam;
-        public MeshedObjectDistanceComparer(Camera cam)
+        public ClosestMeshedObjectComparer(Camera cam)
         {
             this.cam = cam;
         }
