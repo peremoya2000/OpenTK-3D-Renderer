@@ -72,7 +72,7 @@ namespace OpenTK_3D_Renderer
 
         public bool IsTransparent()
         {
-            return material != null && material.Type == MaterialType.Transparent;
+            return material != null && material.AlphaMode == AlphaMode.Transparent;
         }
 
         public float GetMeshRadius()
@@ -162,7 +162,7 @@ namespace OpenTK_3D_Renderer
 
         private void InitializeShader()
         {
-            string fragmentShaderName = (material.Type == MaterialType.Transparent) ? "shader_transparent.frag" : "shader_opaque.frag";
+            string fragmentShaderName = (material.AlphaMode == AlphaMode.Transparent) ? "shader_transparent.frag" : "shader_opaque.frag";
             shader = GLResourceCache.AddOrGetShader(Project.Resources + "shader.vert", Project.Resources + fragmentShaderName);
             shader.Use();
 
@@ -171,7 +171,7 @@ namespace OpenTK_3D_Renderer
             shader.SetVector3("material.ambientTint", material.AmbientTint);
             shader.SetVector3("material.diffuseTint", material.DiffuseTint.Xyz);
             shader.SetFloat("material.shininess", material.Shininess);
-            if(material.Type == MaterialType.Transparent)
+            if(material.AlphaMode == AlphaMode.Transparent)
             {
                 shader.SetFloat("material.opacity", material.Opacity);
             }

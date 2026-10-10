@@ -12,7 +12,7 @@ namespace OpenTK_3D_Renderer
         private readonly int handle;
         private readonly ImageResult image;
         private readonly string pathToFile;
-        public MaterialType MaterialType { get; private set; }
+        public AlphaMode AlphaMode { get; private set; }
 
         public Texture(string projectFilePath)
         {
@@ -21,7 +21,7 @@ namespace OpenTK_3D_Renderer
             Use();
 
             image = LoadImage();
-            MaterialType = GetMaterialType();
+            AlphaMode = GetAlphaMode();
             GL.TexImage2D(TextureTarget.Texture2D, 0, PixelInternalFormat.Rgba,
                 image.Width, image.Height, 0,
                 PixelFormat.Rgba, PixelType.UnsignedByte, image.Data);
@@ -55,7 +55,7 @@ namespace OpenTK_3D_Renderer
             }
         }
 
-        public MaterialType GetMaterialType()
+        public AlphaMode GetAlphaMode()
         {
             const byte opaqueThreshold = byte.MaxValue * 9 / 10;
             const byte transparentThreshold = byte.MaxValue * 1 / 10;
@@ -81,7 +81,7 @@ namespace OpenTK_3D_Renderer
 
             if (opaquePixels >= image.Width * image.Height * minRatioForOpaque)
             {
-                return MaterialType.Opaque;
+                return AlphaMode.Opaque;
             }
 
             if (semitransparentAlphas.Count > 0)
@@ -91,11 +91,11 @@ namespace OpenTK_3D_Renderer
 
                 if (stdDev < tolerance)
                 {
-                    return MaterialType.Transparent;
+                    return AlphaMode.Transparent;
                 }
             }
 
-            return MaterialType.Cutout;
+            return AlphaMode.Cutout;
         }
 
         public float CalculateAverageOpacity()

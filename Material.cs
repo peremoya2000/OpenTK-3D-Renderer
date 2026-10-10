@@ -2,52 +2,48 @@
 
 namespace OpenTK_3D_Renderer
 {
-    public enum MaterialType { Opaque, Cutout, Transparent }
+    public enum AlphaMode { Opaque, Cutout, Transparent }
 
     public class Material
     {
-        public Texture MainTexture;
+        public Texture MainTexture { get; private set; }
         public Vector3 AmbientTint;
         public Vector4 DiffuseTint;
         public float Shininess;
         public float Opacity;
-        public MaterialType Type;
+        public AlphaMode AlphaMode => MainTexture.AlphaMode;
 
         public Material()
         {
             MainTexture = GLResourceCache.AddOrGetTexture(Project.Resources + Project.DefaultTex);
-            Type = MainTexture.MaterialType;
             AmbientTint = Vector3.One;
             DiffuseTint = Vector4.One;
             Shininess = 32;
-            SetOpacityByMaterialType();
+            SetOpacityByAlphaMode();
         }
         public Material(string texturePath, float shininess = 32)
         {
             MainTexture = GLResourceCache.AddOrGetTexture(texturePath);
-            Type = MainTexture.MaterialType;
             AmbientTint = Vector3.One;
             DiffuseTint = Vector4.One;
             Shininess = shininess;
-            SetOpacityByMaterialType();
+            SetOpacityByAlphaMode();
         }
         public Material(string texturePath, Vector3 ambientTint, Vector4 diffuseTint, float shininess = 32)
         {
             MainTexture = GLResourceCache.AddOrGetTexture(texturePath);
-            Type = MainTexture.MaterialType;
             AmbientTint = ambientTint;
             DiffuseTint = diffuseTint;
             Shininess = shininess;
-            SetOpacityByMaterialType();
+            SetOpacityByAlphaMode();
         }
         public Material(Texture texture, Vector3 ambientTint, Vector4 diffuseTint, float shininess = 32)
         {
             MainTexture = texture;
-            Type = MainTexture.MaterialType;
             AmbientTint = ambientTint;
             DiffuseTint = diffuseTint;
             Shininess = shininess;
-            SetOpacityByMaterialType();
+            SetOpacityByAlphaMode();
         }
 
         public Material GetCopy()
@@ -55,11 +51,11 @@ namespace OpenTK_3D_Renderer
             return new Material(MainTexture, AmbientTint, DiffuseTint, Shininess);
         }
 
-        private void SetOpacityByMaterialType()
+        private void SetOpacityByAlphaMode()
         {
-            Opacity = Type switch
+            Opacity = MainTexture.AlphaMode switch
             {
-                MaterialType.Transparent => MainTexture.CalculateAverageOpacity(),
+                AlphaMode.Transparent => MainTexture.CalculateAverageOpacity(),
                 _ => 1f,
             };
         }
